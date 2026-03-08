@@ -5,6 +5,7 @@ import { proxyProp } from '../utils/decorators';
 import type { VisualIR } from '@shxnovel/schema';
 import { isColor } from '../utils/typeCheck';
 import { VisualNode, type VisualNodeState } from './visual-node';
+import { SceneManager } from '../resource/scene-manager';
 
 export interface VisualObjectState {
     name: string;
@@ -15,6 +16,7 @@ export interface VisualObjectState {
     groupAlpha: number;
     tint: number; // Hex color
     nodes: Record<string, VisualNodeState>;
+    parentName?: string; // 记录挂载的场景
 }
 
 export class VisualObject extends THREE.Group {
@@ -176,7 +178,8 @@ export class VisualObject extends THREE.Group {
             rotation: [this.rotation.x, this.rotation.y, this.rotation.z],
             nodes: nodesState,
             groupAlpha: this.opacity,
-            tint: this.sharedUniforms.uTint.value.getHex()
+            tint: this.sharedUniforms.uTint.value.getHex(),
+            parentName: this.parent?.name
         };
     }
 
@@ -199,6 +202,17 @@ export class VisualObject extends THREE.Group {
         if (state.tint !== undefined) {
             this.sharedUniforms.uTint.value.setHex(state.tint);
         }
+
+        // 恢复挂载关系
+        if (state.parentName && state.parentName.startsWith('s_')) {
+            const scene = await SceneManager.get(state.parentName);
+            if (scene && this.parent !== scene) {
+                scene.add(this);
+            }
+        } else if (!state.parentName && this.parent) {
+            this.parent.remove(this);
+        }
+
         renderScheduler.requestRender();
     }
 }

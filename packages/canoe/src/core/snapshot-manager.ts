@@ -45,13 +45,25 @@ export class SnapshotManager {
         Pipeline.use(snapshot.pipeline.current);
         await Pipeline.build();
 
-        // 2. Restore Cameras
+        // 3. Restore Cameras
         for (const camState of snapshot.cameras) {
             const cam = await CameraManager.get(camState.name);
             cam.recover(camState);
         }
 
-        // 3. Restore Visuals
+        // 4. Restore Visuals
+        const snapshotVisualNames = new Set(snapshot.visuals.map(v => v.name));
+        const allVisuals = VisualManager.getInstances();
+        
+        // Remove visuals that exist in the engine but not in the snapshot
+        for (const vis of allVisuals) {
+            if (!snapshotVisualNames.has(vis.name)) {
+                if (vis.parent) {
+                    vis.parent.remove(vis);
+                }
+            }
+        }
+
         const recoverPromises = snapshot.visuals.map(visState => 
             VisualManager.recover(visState.name, visState)
         );

@@ -180,6 +180,26 @@ export class CanoeMachine {
         await this.runLoop();
     }
 
+    /**
+     * 强制跳转并重新执行指定位置的指令
+     * 主要用于回溯（Rollback）后恢复现场并重新播放动画
+     */
+    async goto(chapter: string, index: number) {
+        logger.info(`[Machine] Forced jump to ${chapter}:${index}`);
+        this.status = 'idle'; // 打断当前的 waiting 状态
+        
+        GameSession.chapter = chapter;
+        GameSession.index = index;
+        
+        // 确保指令加载
+        if (!this.instructions.length || this.instructions !== await StoryManager.get(chapter)) {
+            this.instructions = await StoryManager.get(chapter);
+        }
+
+        // 重新进入执行循环
+        await this.runLoop();
+    }
+
     getStatus() {
         return this.status;
     }

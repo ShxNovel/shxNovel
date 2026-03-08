@@ -19,6 +19,9 @@ export class GameViewController implements ReactiveController {
     private readonly AUTO_DELAY = 2000; 
     private readonly FAST_INTERVAL = 250; 
 
+    /** 冷却状态：防止关闭模态层时的点击穿透 */
+    private _isClosingCooldown = false;
+
     constructor(host: GameViewHost) {
         this.host = host;
         host.addController(this);
@@ -41,6 +44,9 @@ export class GameViewController implements ReactiveController {
         this._stopLoop();
     }
 
+    /**
+     * 核心修复：每次调用都返回一个全新的对象引用
+     */
     get gameContext() {
         return {
             isAuto: this.isAuto,
@@ -56,6 +62,12 @@ export class GameViewController implements ReactiveController {
     // --- Core Logic ---
 
     public setModalState(open: boolean) {
+        if (!open && this.isModalOpen) {
+            // 如果是从开启转为关闭，开启短暂的点击拦截冷却
+            this._isClosingCooldown = true;
+            setTimeout(() => { this._isClosingCooldown = false; }, 100);
+        }
+
         this.isModalOpen = open;
         if (open) {
             this.stopAuto();
@@ -184,11 +196,13 @@ export class GameViewController implements ReactiveController {
     private handleWheel = (e: WheelEvent) => {
         if (this.isModalOpen) return;
 
-        if (e.deltaY > 0) {
+        if (e.deltaY > 10) {
             this.handleUserClick();
-        } else if (e.deltaY < 0) {
-            console.log('TODO: Open Backlog');
-            this.setModalState(true);
+        } else if (e.deltaY < -10) {
+            // 只有在允许存档（演出静止）时才允许打开 Backlog
+            if (this.canSaveNow()) {
+                this.host.dispatchEvent(new CustomEvent('open-backlog', { bubbles: true, composed: true }));
+            }
         }
     };
 
@@ -203,7 +217,8 @@ export class GameViewController implements ReactiveController {
     };
 
     public handleUserClick = () => {
-        if (this.isModalOpen) return;
+        // 如果模态层开启，或者是刚刚关闭（冷却中），则不响应点击推进
+        if (this.isModalOpen || this._isClosingCooldown) return;
 
         if (this.uiHidden) {
             this.uiHidden = false;
@@ -256,14 +271,19 @@ export class GameViewController implements ReactiveController {
 
     public onBacklog = (e: Event) => {
         this.stopProp(e);
-        console.log('TODO: Open Backlog');
-        this.setModalState(true);
+        if (this.canSaveNow()) {
+            this.host.dispatchEvent(new CustomEvent('open-backlog', { bubbles: true, composed: true }));
+        } else {
+            logger.warn('[GameView] Cannot open backlog during animations');
+        }
     };
 
     public onSave = (e: Event) => {
         this.stopProp(e);
-        console.log('TODO: Open Save UI');
-        this.setModalState(true);
+        if (this.canSaveNow()) {
+            console.log('TODO: Open Save UI');
+            this.setModalState(true);
+        }
     };
 
     /**
@@ -271,15 +291,12 @@ export class GameViewController implements ReactiveController {
      */
     private canSaveNow(): boolean {
         const dialogue = this.host.dialogue;
-        // 如果正在打字，不允许存档
         if (dialogue && dialogue.isTyping) return false;
 
-        // 如果 Master Timeline 正在播放，不允许存档
         const tl = TimelineBuilder.active;
         if (tl && !tl.completed) return false;
 
         const status = canoeMachine.getStatus();
-        // 只有在等待用户输入（此时演出已播完）或者是空闲状态时才允许存档
         return status === 'waiting' || status === 'idle';
     }
 
@@ -310,7 +327,7 @@ export class GameViewController implements ReactiveController {
 
     public onQSave = async (e: Event) => {
         this.stopProp(e);
-        
+
         const success = await this.performSave('qsave');
         if (success) {
             // 额外存一份到 latest，以便主菜单“继续游戏”
@@ -323,3 +340,4 @@ export class GameViewController implements ReactiveController {
         }
     };
 }
+

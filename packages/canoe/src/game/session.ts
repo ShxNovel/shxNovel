@@ -29,7 +29,7 @@ export class GameSession {
      */
     static init() {
         if (this._initialized) return;
-        // 自动缓存最新的文本指令
+        // 自动缓存最新的文本指令 (兜底机制)
         eventController.on('tick', (textData) => {
             this.lastText = textData;
         });
@@ -45,12 +45,15 @@ export class GameSession {
         
         const coreSnapshot = await SnapshotManager.takeSnapshot();
         
-        return {
+        // 关键：返回包含所有字段的完整 SessionState
+        const state: SessionState = {
             ...coreSnapshot,
             chapter: this.chapter,
             index: this.index,
-            lastText: this.lastText
+            lastText: this.lastText ? JSON.parse(JSON.stringify(this.lastText)) : null // 深拷贝防止引用篡改
         };
+
+        return state;
     }
 
     /**

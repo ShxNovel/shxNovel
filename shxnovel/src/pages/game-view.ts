@@ -153,7 +153,7 @@ export class GameView extends LitElement implements GameViewHost {
 
     disconnectedCallback() {
         super.disconnectedCallback();
-
+        
         // 6. 清理
         eventController.off('tick', this._handleTickEvent);
         cancelAnimationFrame(this._rafId);
@@ -217,7 +217,7 @@ export class GameView extends LitElement implements GameViewHost {
         };
 
         return html`
-            <div class="body ${classMap({ 'is-fast': ctrl.isFast })}">
+            <div class="body ${classMap({ 'is-fast': ctrl.isFast })}" @open-backlog=${() => this._toggleBacklog(true)}>
                 <game-top-menu 
                     class=${classMap(uiClasses)} 
                     @click=${ctrl.stopProp}
