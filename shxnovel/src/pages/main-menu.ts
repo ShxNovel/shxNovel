@@ -1,7 +1,7 @@
 import { LitElement, html, unsafeCSS } from 'lit';
-import { customElement, property, query } from 'lit/decorators.js';
+import { customElement, property, query, state } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
-import { GameLauncher } from '@shxnovel/canoe';
+import { GameLauncher, GameStorage } from '@shxnovel/canoe';
 
 // @ts-ignore
 import '../components/vn-confirm-dialog';
@@ -11,6 +11,9 @@ import { VnConfirmDialog } from '../components/vn-confirm-dialog';
 import inlineStyles from './main-menu.css?inline';
 import { decideExitGame } from '../core/system';
 
+// 导入存档组件
+import '../components/game/game-save-ui';
+
 @customElement('main-menu')
 export class MainMenu extends LitElement {
     static styles = unsafeCSS(inlineStyles);
@@ -19,14 +22,22 @@ export class MainMenu extends LitElement {
     @query('vn-confirm-dialog')
     confirmDialog!: VnConfirmDialog;
 
-    async handleExit() {
-        // '未保存的进度将会丢失，确定要退出吗？', '退出游戏'
-        const isConfirmed = await this.confirmDialog.ask('是否退出游戏');
+    /** 是否显示读档界面 */
+    @state() private _showLoadUI = false;
+    /** 是否存在最新的自动存档 */
+    @state() private _hasLatestSave = false;
 
+    async connectedCallback() {
+        super.connectedCallback();
+        // 检查是否存在自动存档
+        const latest = await GameStorage.load('latest');
+        this._hasLatestSave = !!latest;
+    }
+
+    async handleExit() {
+        const isConfirmed = await this.confirmDialog.ask('是否退出游戏');
         if (isConfirmed) {
             await decideExitGame();
-        } else {
-            // cancel
         }
     }
 
@@ -35,9 +46,25 @@ export class MainMenu extends LitElement {
         Router.go('/game');
     };
 
-    startFromBeginning = () => {
+    startFromBeginning = async () => {
+        if (this._hasLatestSave) {
+            const isConfirmed = await this.confirmDialog.ask(
+                '存在尚未完成的追忆，从头开始将覆盖自动存档，确定吗？',
+                '开始新游戏'
+            );
+            if (!isConfirmed) return;
+        }
+        
         GameLauncher.launch({ type: 'new' });
         Router.go('/game');
+    };
+
+    openLoadUI = () => {
+        this._showLoadUI = true;
+    };
+
+    closeLoadUI = () => {
+        this._showLoadUI = false;
     };
 
     render() {
@@ -48,30 +75,29 @@ export class MainMenu extends LitElement {
             <p class="subtitle">—— 那些无法拾起的时光碎片 ——</p>
 
             <div class="container">
-                <div class="btn-rose-wrapper">
-                    <button class="btn-rose" @click=${this.continueGame}>继续追忆</button>
-                </div>
+                ${this._hasLatestSave ? html`
+                    <div class="btn-rose-wrapper">
+                        <button class="btn-rose" @click=${this.continueGame}>继续追忆</button>
+                    </div>
+                ` : ''}
 
                 <div class="btn-amethyst-wrapper">
                     <button class="btn-amethyst" @click=${this.startFromBeginning}>从头开始</button>
                 </div>
 
-                <button class="btn-aqua">
+                <button class="btn-aqua" @click=${this.openLoadUI}>
                     <span class="btn-aqua-content">记 录</span>
                 </button>
 
                 <button class="btn-aqua">
                     <span class="btn-aqua-content">画 廊</span>
                 </button>
-
-                <!-- <button class="btn-moon">
-                    <span>画 廊</span>
-                </button> -->
-
-                <!-- <button class="btn-sapphire">
-                    <span class="btn-sapphire-content">设置</span>
-                </button> -->
             </div>
+
+            <!-- 读档层 -->
+            ${this._showLoadUI ? html`
+                <game-save-ui mode="load" isMainMenu @close=${this.closeLoadUI}></game-save-ui>
+            ` : ''}
 
             <div class="bottom">
                 <div class="left">

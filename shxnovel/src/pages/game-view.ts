@@ -28,8 +28,9 @@ import { logger } from '@shxnovel/canoe/logger.js';
 import { gameContext } from '../context/game-context';
 import { engine } from 'animejs';
 
-// 导入 Backlog
+// 导入模态层组件
 import '../components/game/game-backlog';
+import '../components/game/game-save-ui';
 
 type UnpackArray<T> = T extends (infer U)[] ? U : T;
 
@@ -61,6 +62,9 @@ export class GameView extends LitElement implements GameViewHost {
 
     /** 是否显示日志界面 */
     @state() private _showBacklog = false;
+    /** 是否显示存档/读档界面 */
+    @state() private _showSaveUI = false;
+    @state() private _saveMode: 'save' | 'load' = 'save';
 
     private _controller = new GameViewController(this);
 
@@ -119,7 +123,7 @@ export class GameView extends LitElement implements GameViewHost {
 
             // 4. 初始化 Session 和 历史记录
             GameSession.reset();
-            HistoryManager.clear(); // 核心修复：开始新会话时清空回溯栈
+            HistoryManager.clear();
 
             // 5. 根据上下文恢复或初始化 Session
             if (context.mode === 'restore' && context.snapshot) {
@@ -171,7 +175,7 @@ export class GameView extends LitElement implements GameViewHost {
 
         // 设置说话人和引号样式
         this.dialogue.useQuote = data.quote;
-        this.dialogue.speakerName = data.name; // 关键：同步说话人名字
+        this.dialogue.speakerName = data.name;
         this.dialogue.init();
 
         const solveText = (c: UnpackArray<TextUnit['content']>) => {
@@ -211,6 +215,15 @@ export class GameView extends LitElement implements GameViewHost {
         this._controller.setModalState(show);
     }
 
+    /**
+     * 呼出/关闭存档界面
+     */
+    private _toggleSaveUI(show: boolean, mode: 'save' | 'load' = 'save') {
+        this._saveMode = mode;
+        this._showSaveUI = show;
+        this._controller.setModalState(show);
+    }
+
     render() {
         const ctrl = this._controller;
 
@@ -240,6 +253,11 @@ export class GameView extends LitElement implements GameViewHost {
                     <game-backlog @close=${() => this._toggleBacklog(false)}></game-backlog>
                 ` : ''}
 
+                <!-- 存档/读档层 -->
+                ${this._showSaveUI ? html`
+                    <game-save-ui .mode=${this._saveMode} @close=${() => this._toggleSaveUI(false)}></game-save-ui>
+                ` : ''}
+
                 <div class="bottom ${classMap(uiClasses)}">
                     <game-dialogue></game-dialogue>
                     <game-bottom-tool
@@ -249,7 +267,8 @@ export class GameView extends LitElement implements GameViewHost {
                         @click=${ctrl.stopProp}
                         @toggle=${ctrl.onToggle}
                         @backlog=${() => this._toggleBacklog(true)}
-                        @save=${ctrl.onSave}
+                        @save=${() => this._toggleSaveUI(true, 'save')}
+                        @load=${() => this._toggleSaveUI(true, 'load')}
                         @auto=${ctrl.onAuto}
                         @fast=${ctrl.onFast}
                         @replay=${ctrl.onReplay}

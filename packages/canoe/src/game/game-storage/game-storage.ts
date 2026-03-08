@@ -5,6 +5,7 @@
 export interface StorageDriver {
     save(id: string, data: any): Promise<void>;
     load(id: string): Promise<any>;
+    remove(id: string): Promise<void>;
 }
 
 /**
@@ -42,5 +43,16 @@ export class GameStorage {
             throw new Error('[GameStorage] Driver not set. Please call setDriver() first.');
         }
         return await this.driver.load(saveId);
+    }
+
+    /**
+     * 删除数据
+     * @param saveId 存档 ID
+     */
+    static async remove(saveId: string): Promise<void> {
+        if (!this.driver) {
+            throw new Error('[GameStorage] Driver not set. Please call setDriver() first.');
+        }
+        return await this.driver.remove(saveId);
     }
 }

@@ -7,6 +7,7 @@ import { eventController } from '../core/MListener';
 import { logger } from '../logger';
 import { Pipeline } from '../object';
 import { HistoryManager } from './history-manager';
+import { GameStorage } from './game-storage';
 
 export type MachineStatus = 'idle' | 'running' | 'waiting' | 'error';
 
@@ -52,6 +53,15 @@ export class CanoeMachine {
             if (!ir) {
                 logger.info('[Machine] End of chapter reached');
                 this.status = 'idle';
+                
+                // 游戏自然结束时，清除最新自动存档
+                try {
+                    await GameStorage.remove('latest');
+                    logger.debug('[Machine] Auto-save (latest) cleared due to end of game.');
+                } catch (e) {
+                    logger.warn('[Machine] Failed to clear auto-save:', e);
+                }
+
                 break;
             }
 
@@ -77,15 +87,25 @@ export class CanoeMachine {
 
         switch (ir.type) {
             case 'tick':
-                // 关键修复：在记录历史前，手动同步当前文本到 Session
-                // 这样 capture() 出来的快照就包含了这一条台词
+                // 1. 同步当前文本到 Session，确保快照内容准确
                 GameSession.lastText = ir.text;
+
+                // 2. 记录历史回溯栈
                 await HistoryManager.push();
 
-                // 1. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
+                // 3. 核心：自动存档到 'latest' (Silent Save)
+                // 这样玩家随时退出，点击“继续追忆”都能回到这一行
+                try {
+                    const snapshot = await GameSession.capture();
+                    await GameStorage.save('latest', snapshot);
+                } catch (err) {
+                    logger.warn('[Machine] Auto-save to latest failed:', err);
+                }
+
+                // 4. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
                 TimelineBuilder.skip();
 
-                // 2. 同时分发系统指令和动画指令
+                // 5. 同时分发系统指令和动画指令
                 await AnimateExecutor.executeSystem(ir.system);
                 const res = await AnimateExecutor.executeAnimate(ir.animate);
                 
@@ -93,7 +113,7 @@ export class CanoeMachine {
                     res.tl.play();
                 }
 
-                // 3. 抛出文本事件
+                // 6. 抛出文本事件
                 eventController.emit('tick', ir.text);
 
                 return true; 
@@ -192,9 +212,8 @@ export class CanoeMachine {
         GameSession.index = index;
         
         // 确保指令加载
-        if (!this.instructions.length || this.instructions !== await StoryManager.get(chapter)) {
-            this.instructions = await StoryManager.get(chapter);
-        }
+        const instructions = await StoryManager.get(chapter);
+        this.instructions = instructions;
 
         // 重新进入执行循环
         await this.runLoop();

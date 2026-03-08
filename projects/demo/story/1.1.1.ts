@@ -10,7 +10,7 @@ const stand = visual("v_stand");
 flag("start");
 
 aside`静谧的森林中，温和的阳光从树叶的空隙间筛落下来。`;
-school.act.expr("body:p0");
+school.act.expr("1#self", "body:p0");
 school.enter.into(stage);
 stand.act.y(-500);
 stand.act.expr("body:s1")

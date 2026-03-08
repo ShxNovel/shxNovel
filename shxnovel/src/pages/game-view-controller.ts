@@ -16,8 +16,8 @@ export class GameViewController implements ReactiveController {
     public isModalOpen = false;
 
     private _autoTimer: any = null;
-    private readonly AUTO_DELAY = 2000; 
-    private readonly FAST_INTERVAL = 250; 
+    private readonly AUTO_DELAY = 2000;
+    private readonly FAST_INTERVAL = 250;
 
     /** 冷却状态：防止关闭模态层时的点击穿透 */
     private _isClosingCooldown = false;
@@ -133,11 +133,13 @@ export class GameViewController implements ReactiveController {
 
         const dialogue = this.host.dialogue;
         const status = canoeMachine.getStatus();
+        const tl = TimelineBuilder.active;
+        const isAnimating = tl && !tl.completed;
 
+        // --- Fast Mode Logic (保持不变，追求最快速度) ---
         if (this.isFast) {
             if (dialogue?.isTyping) dialogue.finish();
-            const tl = TimelineBuilder.active;
-            if (tl && !tl.completed) TimelineBuilder.skip();
+            if (isAnimating) TimelineBuilder.skip();
 
             if (status === 'waiting' || status === 'idle') {
                 canoeMachine.next();
@@ -145,17 +147,32 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
+        // --- Auto Mode Logic (重构：温和等待) ---
         if (this.isAuto) {
-            if (dialogue?.isTyping) return;
-            const tl = TimelineBuilder.active;
-            if (tl && !tl.completed) return;
+            // 1. 如果还在打字或者播动画，直接跳过本轮，不做任何操作
+            if (dialogue?.isTyping || isAnimating) {
+                return;
+            }
 
+            // 2. 只有在等待点击的状态下，才进行推进逻辑
             if (status === 'waiting' || status === 'idle') {
-                this._stopLoop(); 
+                // 停止当前的高频轮询计时器
+                this._stopLoop();
+
+                // 开启一个单次的延迟任务
                 setTimeout(() => {
+                    // 再次检查状态，防止在等待期间玩家关闭了 Auto 或打开了模态层
                     if (this.isAuto && !this.isModalOpen) {
-                        canoeMachine.next();
-                        this._startLoop(); 
+                        const currentTl = TimelineBuilder.active;
+                        const currentlyAnimating = currentTl && !currentTl.completed;
+
+                        // 确保在这一秒钟的等待里，没有新的演出被触发（例如异步加载）
+                        if (!dialogue?.isTyping && !currentlyAnimating) {
+                            canoeMachine.next();
+                        }
+
+                        // 无论是否推进，都重新回到轮询循环
+                        this._startLoop();
                     }
                 }, this.AUTO_DELAY);
             }
@@ -330,9 +347,6 @@ export class GameViewController implements ReactiveController {
 
         const success = await this.performSave('qsave');
         if (success) {
-            // 额外存一份到 latest，以便主菜单“继续游戏”
-            const snapshot = await GameSession.capture();
-            await GameStorage.save('latest', snapshot);
             logger.info('[GameView] Quick Save successful');
         } else {
             // 如果保存被阻止（例如正在演出），发出通知

@@ -4,7 +4,7 @@
     "type": "tick",
     "text": {"name": null, "quote": false, "content": ["静谧的森林中，温和的阳光从树叶的空隙间筛落下来。"]},
     "animate": [
-      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p0"]}},
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["1#self", "body:p0"]}},
       {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}},
       {"kind": "act", "target": "v_stand", "args": {"position": {"y": -500}}},
       {"kind": "act", "target": "v_stand", "args": {"expr": ["body:s1"]}},

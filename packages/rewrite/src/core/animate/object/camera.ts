@@ -8,7 +8,7 @@ export interface CameraActBuilder extends ActBuilder {
     zoom(value: number): this;
 }
 
-class CameraImpl<T extends Animate.VisualKey> {
+class CameraImpl<T extends Animate.CameraKey> {
     readonly type = 'camera';
     constructor(public readonly name: T) { }
 
@@ -42,6 +42,6 @@ class CameraImpl<T extends Animate.VisualKey> {
     }
 }
 
-export function camera<T extends Animate.VisualKey>(name: T) {
+export function camera<T extends Animate.CameraKey>(name: T) {
     return new CameraImpl(name) as Omit<CameraImpl<T>, 'type' | 'name'>;
 }
