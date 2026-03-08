@@ -15,8 +15,8 @@ export class GameViewController implements ReactiveController {
     public isFast = false;
 
     private _autoTimer: any = null;
-    private readonly AUTO_DELAY = 2000; // 自动播放等待时间
-    private readonly FAST_INTERVAL = 250; // 快进检测频率
+    private readonly AUTO_DELAY = 2000; 
+    private readonly FAST_INTERVAL = 250; 
 
     constructor(host: GameViewHost) {
         this.host = host;
@@ -40,6 +40,9 @@ export class GameViewController implements ReactiveController {
         this._stopLoop();
     }
 
+    /**
+     * 核心修复：每次调用都返回一个全新的对象引用
+     */
     get gameContext() {
         return {
             isAuto: this.isAuto,
@@ -98,14 +101,10 @@ export class GameViewController implements ReactiveController {
         }
     }
 
-    /**
-     * 自动/快进的主循环
-     */
     private _updateLoop() {
         const dialogue = this.host.dialogue;
         const status = canoeMachine.getStatus();
 
-        // 快进逻辑：优先级最高
         if (this.isFast) {
             if (dialogue?.isTyping) dialogue.finish();
             const tl = TimelineBuilder.active;
@@ -117,20 +116,17 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
-        // 自动播放逻辑
         if (this.isAuto) {
-            // 如果还在打字或播动画，等待
             if (dialogue?.isTyping) return;
             const tl = TimelineBuilder.active;
             if (tl && !tl.completed) return;
 
-            // 如果机器处于等待输入状态，经过延迟后推进
             if (status === 'waiting' || status === 'idle') {
-                this._stopLoop(); // 暂时停止循环，防止重复触发
+                this._stopLoop(); 
                 setTimeout(() => {
                     if (this.isAuto) {
                         canoeMachine.next();
-                        this._startLoop(); // 继续循环
+                        this._startLoop(); 
                     }
                 }, this.AUTO_DELAY);
             }
@@ -145,7 +141,6 @@ export class GameViewController implements ReactiveController {
     // --- Event Handlers ---
 
     private handleKeyDown = async (e: KeyboardEvent) => {
-        // 使用退格键(Backspace)作为快速回溯的测试快捷键
         if (e.key === 'Backspace' && !this.uiHidden) {
             this.stopAuto();
             const success = await HistoryManager.back();
@@ -154,14 +149,12 @@ export class GameViewController implements ReactiveController {
             }
         }
 
-        // Ctrl 键快进 (按住)
         if (e.key === 'Control') {
             if (!this.isFast) this.toggleFast();
         }
     };
 
     private handleKeyUp = (e: KeyboardEvent) => {
-        // 松开 Ctrl 停止快进
         if (e.key === 'Control') {
             if (this.isFast) this.stopAuto();
         }
@@ -183,9 +176,6 @@ export class GameViewController implements ReactiveController {
         }
     };
 
-    /**
-     * 处理用户点击（推进游戏或跳过演出）
-     */
     public handleUserClick = () => {
         if (this.uiHidden) {
             this.uiHidden = false;
@@ -193,22 +183,18 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
-        // 关键：用户手动点击，立即停止自动播放和快进
         const wasActive = this.isAuto || this.isFast;
         this.stopAuto();
 
-        // 如果之前是自动/快进状态，点击的第一下仅视为“停止”，不触发后续逻辑
         if (wasActive) return;
 
         const dialogue = this.host.dialogue;
 
-        // 1. 优先级最高：如果文本正在播放，立刻结束文本展示
         if (dialogue && dialogue.isTyping) {
             dialogue.finish();
             return;
         }
 
-        // 2. 优先级中等：如果演出动画正在播放且未完成，立刻跳过所有演出动画
         const tl = TimelineBuilder.active;
         if (tl && !tl.completed) {
             logger.debug('[GameView] Skipping animations via TimelineBuilder.skip()');
@@ -216,15 +202,13 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
-        // 3. 优先级最低：一切就绪，推进到下一条指令
         const status = canoeMachine.getStatus();
         if (status === 'waiting' || status === 'idle') {
             canoeMachine.next();
         }
     };
 
-    // --- Toolbar actions ---
-
+    // Toolbar actions
     public stopProp = (e: Event) => e.stopPropagation();
 
     public onToggle = (e: Event) => {
@@ -253,15 +237,39 @@ export class GameViewController implements ReactiveController {
     };
 
     /**
+     * 判断当前是否允许存档
+     */
+    private canSaveNow(): boolean {
+        const dialogue = this.host.dialogue;
+        // 如果正在打字，不允许存档
+        if (dialogue && dialogue.isTyping) return false;
+
+        // 如果 Master Timeline 正在播放，不允许存档
+        const tl = TimelineBuilder.active;
+        if (tl && !tl.completed) return false;
+
+        const status = canoeMachine.getStatus();
+        // 只有在等待用户输入（此时演出已播完）或者是空闲状态时才允许存档
+        return status === 'waiting' || status === 'idle';
+    }
+
+    /**
      * 通用的保存方法，供 UI 层调用
      */
     public async performSave(slotId: string) {
+        if (!this.canSaveNow()) {
+            logger.warn('[GameView] Cannot save during animations or typing');
+            return false;
+        }
+
         try {
             const snapshot = await GameSession.capture();
             await GameStorage.save(slotId, snapshot);
             logger.info(`[GameView] Saved to slot: ${slotId}`);
+            return true;
         } catch (error) {
             logger.error(`[GameView] Failed to save to slot ${slotId}:`, error);
+            return false;
         }
     }
 
@@ -272,13 +280,16 @@ export class GameViewController implements ReactiveController {
 
     public onQSave = async (e: Event) => {
         this.stopProp(e);
-        try {
+        
+        const success = await this.performSave('qsave');
+        if (success) {
+            // 额外存一份到 latest，以便主菜单“继续游戏”
             const snapshot = await GameSession.capture();
-            await GameStorage.save('qsave', snapshot);
             await GameStorage.save('latest', snapshot);
             logger.info('[GameView] Quick Save successful');
-        } catch (error) {
-            logger.error('[GameView] Quick Save failed:', error);
+        } else {
+            // 如果保存被阻止（例如正在演出），发出通知
+            this.host.dispatchEvent(new CustomEvent('save-blocked', { bubbles: true, composed: true }));
         }
     };
 }

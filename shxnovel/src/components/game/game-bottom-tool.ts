@@ -1,19 +1,35 @@
 import { LitElement, html, css, unsafeCSS, CSSResultGroup } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { classMap } from 'lit/directives/class-map.js';
-import { consume } from '@lit/context';
 
 // @ts-ignore
 import inlineStyles from './game-bottom-tool.css?inline';
-import { gameContext, GameContextType } from '../../context/game-context';
 
 @customElement('game-bottom-tool')
 export class GameBottomTool extends LitElement {
     static styles = unsafeCSS(inlineStyles);
 
-    @consume({ context: gameContext, subscribe: true })
+    /** 是否处于自动播放状态 */
+    @property({ type: Boolean })
+    activeAuto = false;
+
+    /** 是否处于快进状态 */
+    @property({ type: Boolean })
+    activeFast = false;
+
+    /** 临时状态：是否显示保存成功的视觉反馈 */
     @state()
-    private _gameContext!: GameContextType;
+    private _isSaved = false;
+
+    /**
+     * 供外部调用：显示“保存成功”的绿色反馈
+     */
+    public flashSaved() {
+        this._isSaved = true;
+        setTimeout(() => {
+            this._isSaved = false;
+        }, 1000);
+    }
 
     _hook_replay = () => {
         this.dispatchEvent(new CustomEvent('replay'));
@@ -36,6 +52,7 @@ export class GameBottomTool extends LitElement {
     }
 
     _hook_qsave = () => {
+        // 仅触发事件，不在这里直接变色
         this.dispatchEvent(new CustomEvent('qsave'));
     }
 
@@ -44,19 +61,16 @@ export class GameBottomTool extends LitElement {
     }
 
     render() {
-        // Fallback if context is not yet available (though it should be)
-        const isAuto = this._gameContext?.isAuto || false;
-        const isFast = this._gameContext?.isFast || false;
-
-        const autoClasses = { tool_btn: true, active: isAuto };
-        const fastClasses = { tool_btn: true, active: isFast };
+        const autoClasses = { tool_btn: true, active: this.activeAuto };
+        const fastClasses = { tool_btn: true, active: this.activeFast };
+        const qsaveClasses = { tool_btn: true, saved: this._isSaved };
 
         return html` <div class="tools">
             <button class=${classMap(autoClasses)} id="btn_auto" @click=${this._hook_auto}>${AutoSvg}Auto</button>
             <button class=${classMap(fastClasses)} id="btn_fast" @click=${this._hook_fast}>${FastSvg}Fast</button>
             <button class="tool_btn" id="btn_replay" @click=${this._hook_replay}>Replay</button>
             <button class="tool_btn" id="btn_backlog" @click=${this._hook_backlog}>${ResetSvg}Backlog</button>
-            <button class="tool_btn" id="btn_q_save" @click=${this._hook_qsave}>Q.save</button>
+            <button class=${classMap(qsaveClasses)} id="btn_q_save" @click=${this._hook_qsave}>Q.save</button>
             <button class="tool_btn" id="btn_save" @click=${this._hook_save}>${QSaveSvg}Save</button>
             <button class="tool_btn" id="btn_hide" @click=${this._hook_toggle}>${HideSvg}</button>
         </div>`;

@@ -10,6 +10,7 @@ import { GameViewController, GameViewHost } from './game-view-controller';
 import inlineStyles from './game-view.css?inline';
 import '../components';
 import { GameDialogue } from '../components/game/game-dialogue';
+import { GameBottomTool } from '../components/game/game-bottom-tool';
 import {
     MainRenderer,
     GameLauncher,
@@ -52,6 +53,7 @@ export class GameView extends LitElement implements GameViewHost {
 
     @query('.CanvasBox', true) CanvasBox!: HTMLDivElement;
     @query('game-dialogue') dialogue!: GameDialogue;
+    @query('#bottomTool') bottomTool!: GameBottomTool;
 
     private _controller = new GameViewController(this);
 
@@ -67,6 +69,21 @@ export class GameView extends LitElement implements GameViewHost {
     private _handleTickEvent = (data: any) => {
         this._handleTick(data);
         console.log('[GameView] Tick Event Received:', data);
+    };
+
+    /**
+     * 响应快速存档请求
+     */
+    private _onQSaveRequest = async () => {
+        const success = await this._controller.performSave('qsave');
+        if (success) {
+            // 如果控制器返回保存成功，通知底部工具栏闪烁绿色
+            this.bottomTool?.flashSaved();
+            // 同步更新 latest
+            await this._controller.performSave('latest');
+        } else {
+            console.warn('[GameView] Quick Save blocked by ongoing action');
+        }
     };
 
     async connectedCallback(): Promise<void> {
@@ -183,13 +200,14 @@ export class GameView extends LitElement implements GameViewHost {
 
                 <div class="CanvasBox"></div>
 
-                <!-- 可以在这里增加一个全局的状态提示，例如 Skip 标志 -->
+                <!-- 可以在这里增加一个全局的状态提示 -->
                 ${ctrl.isFast ? html`<div class="skip-indicator">SKIP >>></div>` : ''}
                 ${ctrl.isAuto ? html`<div class="auto-indicator">AUTO</div>` : ''}
 
                 <div class="bottom ${classMap(uiClasses)}">
                     <game-dialogue></game-dialogue>
                     <game-bottom-tool
+                        id="bottomTool"
                         .activeAuto=${ctrl.isAuto}
                         .activeFast=${ctrl.isFast}
                         @click=${ctrl.stopProp}
@@ -199,7 +217,7 @@ export class GameView extends LitElement implements GameViewHost {
                         @auto=${ctrl.onAuto}
                         @fast=${ctrl.onFast}
                         @replay=${ctrl.onReplay}
-                        @qsave=${ctrl.onQSave}
+                        @qsave=${this._onQSaveRequest}
                     ></game-bottom-tool>
                 </div>
             </div>
