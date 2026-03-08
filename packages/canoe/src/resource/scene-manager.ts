@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { logger } from '../logger';
 import { WorldManager } from './world-manager';
+import type { SceneIR } from '@shxnovel/schema';
 
 export class SceneManager {
     static pool = new Map<string, Promise<THREE.Scene>>();
@@ -16,9 +17,9 @@ export class SceneManager {
         }
 
         const loadingTask = (async () => {
-            const ir = await WorldManager.get(key);
+            const ir = await WorldManager.get<SceneIR>(key);
             
-            if (ir.kind !== 'scene') {
+            if (ir.type !== 'scene') {
                 throw new Error(`Resource ${key} is not a scene`);
             }
 

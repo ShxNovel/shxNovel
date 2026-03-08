@@ -1,10 +1,11 @@
-import { StoryIR } from '@shxnovel/schema';
+import { StoryIR, BranchIR } from '@shxnovel/schema';
 import { GameSession } from './session';
-import { StoryManager, FlagManager } from '../resource';
+import { StoryManager, FlagManager, InGameData, GlobalData } from '../resource';
 import { AnimateExecutor } from './runtime/animate-executor';
 import { TimelineBuilder } from '../core/timeline-builder';
 import { eventController } from '../core/MListener';
 import { logger } from '../logger';
+import { Pipeline } from '../object';
 
 export type MachineStatus = 'idle' | 'running' | 'waiting' | 'error';
 
@@ -24,6 +25,14 @@ export class CanoeMachine {
 
         logger.info(`[Machine] Starting at ${GameSession.chapter}:${GameSession.index}`);
         this.instructions = await StoryManager.get(GameSession.chapter);
+
+        // 关键修复：确保渲染管线已构建
+        // 如果 steps 为空，说明尚未初始化默认管线，这会导致画面全黑
+        if (Pipeline.steps.length === 0) {
+            logger.debug('[Machine] Initializing default pipeline');
+            await Pipeline.build();
+        }
+
         await this.runLoop();
     }
 
@@ -83,33 +92,11 @@ export class CanoeMachine {
                 return true; // Tick 始终阻塞，直到用户调用 next()
 
             case 'jump':
-                try {
-                    const dest = await FlagManager.getFlag(ir.target);
-                    if (!dest) {
-                        throw new Error(`Flag '${ir.target}' not found`);
-                    }
-
-                    // 如果跳转到不同章节，更新 Session 并重载 IR
-                    if (GameSession.chapter !== dest.name) {
-                        logger.debug(`[Machine] Jumping chapter: ${GameSession.chapter} -> ${dest.name}`);
-                        GameSession.chapter = dest.name;
-                        this.instructions = await StoryManager.get(GameSession.chapter);
-                    }
-
-                    // 设置 PC 指向 Flag 所在位置
-                    // 同样设为 pc - 1，因为外层 while 结束会执行 index++
-                    GameSession.index = dest.pc - 1;
-                    
-                    logger.info(`[Machine] Jumped to ${ir.target} @ ${dest.name}:${dest.pc}`);
-                } catch (err) {
-                    logger.error(`[Machine] Failed to jump to ${ir.target}:`, err);
-                    this.status = 'error';
-                }
+                await this.performJump(ir.target);
                 return false;
 
             case 'branch':
-                // TODO: 实现条件求值逻辑
-                logger.warn('[Machine] Branch not yet implemented');
+                await this.handleBranch(ir);
                 return false;
 
             case 'flag':
@@ -118,6 +105,68 @@ export class CanoeMachine {
 
             default:
                 return false;
+        }
+    }
+
+    /**
+     * 执行跳转逻辑
+     */
+    private async performJump(target: string) {
+        try {
+            const dest = await FlagManager.getFlag(target);
+            if (!dest) {
+                throw new Error(`Flag '${target}' not found`);
+            }
+
+            // 如果跳转到不同章节，更新 Session 并重载 IR
+            if (GameSession.chapter !== dest.name) {
+                logger.debug(`[Machine] Jumping chapter: ${GameSession.chapter} -> ${dest.name}`);
+                GameSession.chapter = dest.name;
+                this.instructions = await StoryManager.get(GameSession.chapter);
+            }
+
+            // 设置 PC 指向 Flag 所在位置
+            // 同样设为 pc - 1，因为外层 while 结束会执行 index++
+            GameSession.index = dest.pc - 1;
+            
+            logger.info(`[Machine] Jumped to ${target} @ ${dest.name}:${dest.pc}`);
+        } catch (err) {
+            logger.error(`[Machine] Failed to jump to ${target}:`, err);
+            this.status = 'error';
+        }
+    }
+
+    /**
+     * 处理条件分支
+     */
+    private async handleBranch(ir: BranchIR) {
+        const { cond, targets, ENDFLAG } = ir;
+
+        // 准备上下文数据
+        const ctx = {
+            inGame: InGameData.visit(),
+            global: GlobalData.visit(),
+        };
+
+        try {
+            /**
+             * 评估条件表达式
+             * IR 里的 cond 格式通常为 "Condition() { return inGame.a > 1 ? 'ok' : 'fail'; }"
+             */
+            const evalFunc = new Function(
+                'ctx',
+                `const { inGame, global } = ctx; const obj = { ${cond} }; return obj.Condition.call({ inGame, global });`
+            );
+
+            const result = String(evalFunc(ctx));
+            const targetFlag = targets[result] || ENDFLAG;
+
+            logger.debug(`[Machine] Branch evaluated: "${result}" -> jumping to flag: ${targetFlag}`);
+            
+            await this.performJump(targetFlag);
+        } catch (err) {
+            logger.error(`[Machine] Failed to evaluate branch:`, err);
+            this.status = 'error';
         }
     }
 

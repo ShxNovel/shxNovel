@@ -1,8 +1,4 @@
-export type BootIntent =
-    | { type: 'new' }
-    | { type: 'continue' }
-    | { type: 'load'; saveId: string }
-    | { type: 'debug'; chapterId: string };
+import { BootIntent } from '../boot-resolver';
 
 export class GameLauncher {
     static intent: BootIntent | null = null;

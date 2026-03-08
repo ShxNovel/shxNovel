@@ -4,7 +4,7 @@ import { renderScheduler } from '../core/render-scheduler';
 import { TextureManager } from '../resource/texture-manager';
 import { ShaderManager } from '../resource/shader-manager';
 import { proxyProp } from '../utils/decorators';
-import type { VisualIR, VisualNodeIR } from '@shxnovel/world';
+import type { VisualIR, VisualNodeIR } from '@shxnovel/schema';
 import { isColor } from '../utils/typeCheck';
 import { deserializeUniformValue, serializeUniformValue, type SerializedUniform } from '../utils/serialization';
 
@@ -40,21 +40,36 @@ export class VisualNode {
         this.mesh = new THREE.Mesh(geometry, this.material);
         this.group.add(this.mesh);
 
-        const shaderName = config.shader.name;
-
-        this.ready = this.initShader(shaderName, sharedUniforms);
+        this.ready = this.initShader(sharedUniforms);
     }
 
-    async initShader(shaderName: string, sharedUniforms: Record<string, THREE.IUniform>) {
-        const shader = await ShaderManager.get(shaderName);
+    async initShader(sharedUniforms: Record<string, THREE.IUniform>) {
+        // Fetch actual GLSL code from ShaderManager
+        const [vShader, fShader] = await Promise.all([
+            ShaderManager.get(this.config.vertexShader),
+            ShaderManager.get(this.config.fragmentShader)
+        ]);
 
-        this.material.vertexShader = shader.vertexShader;
-        this.material.fragmentShader = shader.fragmentShader;
-        this.material.uniforms = THREE.UniformsUtils.clone(shader.uniforms);
+        this.material.vertexShader = vShader.code;
+        this.material.fragmentShader = fShader.code;
+        
+        // Initialize uniforms from config
+        const uniforms: Record<string, THREE.IUniform> = {};
+        const promises: Promise<void>[] = [];
+
+        if (this.config.uniforms) {
+            for (const [uName, uData] of Object.entries(this.config.uniforms)) {
+                const uniform: THREE.IUniform = { value: null };
+                uniforms[uName] = uniform;
+                promises.push(deserializeUniformValue(uniform, uData as any));
+            }
+        }
+
+        await Promise.all(promises);
+        this.material.uniforms = uniforms;
 
         // Merge shared uniforms
         for (const [key, uniform] of Object.entries(sharedUniforms)) {
-            // We blindly assign shared uniforms as requested, assuming shader has them or it doesn't matter
             if (this.material.uniforms[key]) {
                 this.material.uniforms[key] = uniform;
             }
@@ -62,7 +77,9 @@ export class VisualNode {
 
         // Init resolution if size is fixed
         if (this.config.size) {
-            this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
+            if (this.material.uniforms.uResolution) {
+                this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
+            }
         }
     }
 
@@ -72,7 +89,7 @@ export class VisualNode {
 
         let texture;
 
-        switch (Handle.use.kind) {
+        switch (Handle.use.type) {
             case 'texture':
                 texture = await TextureManager.get(Handle.use.name);
                 break;
@@ -80,8 +97,8 @@ export class VisualNode {
 
         if (!texture) return;
 
-        this.material.uniforms.uTexA.value = texture;
-        this.material.uniforms.uMix.value = 0;
+        if (this.material.uniforms.uTexA) this.material.uniforms.uTexA.value = texture;
+        if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
         this.currentVariant = variantName;
 
         const img = texture.image as undefined | HTMLImageElement;
@@ -89,16 +106,16 @@ export class VisualNode {
         const height = img?.height || 1;
 
         // Set texture resolution
-        this.material.uniforms.uResA.value.set(width, height);
+        if (this.material.uniforms.uResA) this.material.uniforms.uResA.value.set(width, height);
 
         if (img && width > 0 && height > 0) {
             this.mesh.scale.set(width, height, 1);
-            this.material.uniforms.uResolution.value.set(width, height);
+            if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(width, height);
         }
 
         if (this.config.size) {
             this.mesh.scale.set(this.config.size[0], this.config.size[1], 1);
-            this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
+            if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
         }
 
         this.mesh.updateMatrix();
@@ -121,10 +138,10 @@ export class VisualNode {
 
         let texture;
 
-        if (Handle.use.kind === 'texture') {
+        if (Handle.use.type === 'texture') {
             texture = await TextureManager.get(Handle.use.name);
         } else {
-            throw new Error(`Unsupported variant kind: ${Handle.use.kind}`);
+            throw new Error(`Unsupported variant kind: ${Handle.use.type}`);
         }
 
         const img = texture.image as HTMLImageElement;
@@ -132,14 +149,14 @@ export class VisualNode {
         const height = img?.height || 1;
 
         const finalize = () => {
-            this.material.uniforms.uTexA.value = texture;
-            this.material.uniforms.uResA.value.set(width, height);
-            this.material.uniforms.uMix.value = 0;
+            if (this.material.uniforms.uTexA) this.material.uniforms.uTexA.value = texture;
+            if (this.material.uniforms.uResA) this.material.uniforms.uResA.value.set(width, height);
+            if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
             this.currentVariant = variantName;
 
             if (!this.config.size) {
                 this.mesh.scale.set(width, height, 1);
-                this.material.uniforms.uResolution.value.set(width, height);
+                if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(width, height);
             }
         };
 
@@ -147,13 +164,17 @@ export class VisualNode {
             autoplay: false,
             // 1. Pre-Normalization: Ensure we start from uMix=0
             onBegin: () => {
-                if (this.material.uniforms.uMix.value > 0.5) {
-                    this.material.uniforms.uTexA.value = (this.material.uniforms.uTexB.value as THREE.Texture);
-                    this.material.uniforms.uResA.value.copy(this.material.uniforms.uResB.value);
+                if (this.material.uniforms.uMix && this.material.uniforms.uMix.value > 0.5) {
+                    if (this.material.uniforms.uTexA && this.material.uniforms.uTexB) {
+                        this.material.uniforms.uTexA.value = (this.material.uniforms.uTexB.value as THREE.Texture);
+                    }
+                    if (this.material.uniforms.uResA && this.material.uniforms.uResB) {
+                        this.material.uniforms.uResA.value.copy(this.material.uniforms.uResB.value);
+                    }
                 }
-                this.material.uniforms.uMix.value = 0;
-                this.material.uniforms.uTexB.value = texture;
-                this.material.uniforms.uResB.value.set(width, height);
+                if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
+                if (this.material.uniforms.uTexB) this.material.uniforms.uTexB.value = texture;
+                if (this.material.uniforms.uResB) this.material.uniforms.uResB.value.set(width, height);
             }
         });
 
@@ -163,7 +184,7 @@ export class VisualNode {
         }
 
         // 2. Drive the transition (A -> B)
-        if (duration > 0) {
+        if (duration > 0 && this.material.uniforms.uMix) {
             tl.add(this.material.uniforms.uMix, {
                 value: 1,
                 duration,
@@ -172,7 +193,7 @@ export class VisualNode {
             });
         } else {
             tl.call(() => {
-                this.material.uniforms.uMix.value = 1;
+                if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 1;
                 finalize();
             });
         }
@@ -270,7 +291,7 @@ export interface VisualObjectState {
 
 export class VisualObject extends THREE.Group {
     private nodes = new Map<string, VisualNode>();
-    private exprMap = new Map<string, any>();
+    public exprMap = new Map<string, any>();
     private sharedUniforms: Record<string, THREE.IUniform> = {
         uGroupAlpha: { value: 1 },
         uTint: { value: new THREE.Color(1, 1, 1) },

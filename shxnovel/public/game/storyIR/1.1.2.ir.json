@@ -1,0 +1,42 @@
+[
+  {"type": "flag", "name": "start2", "meta": {"debug": "1.1.2.ts:9:1"}},
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["而且还长得非常可爱，十分正点。"]},
+    "animate": [
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p0"]}},
+      {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}}
+    ],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": "卡咖喱", "quote": true, "content": ["一双大眼睛里有一对红宝石般的眼眸。淡淡的粉红色嘴唇艳丽而湿润。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p1"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["肌肤如牛奶般滑顺，雪白耀眼得令人无法直视。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p2"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": "卡咖喱", "quote": true, "content": ["水面上的一双腿纤细而修长，是一双美腿。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p3"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["还有，最惹人注目的是——"]},
+    "animate": [{"kind": "leave", "target": "v_bg", "args": {}}],
+    "system": [],
+    "meta": {}
+  },
+  {"type": "jump", "target": "start", "meta": {"debug": "1.1.2.ts:27:1"}}
+]

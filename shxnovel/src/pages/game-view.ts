@@ -14,8 +14,9 @@ import {
     MainRenderer,
     GameLauncher,
     BootResolver,
-    runtime,
-    RuntimeEventListener,
+    GameSession,
+    canoeMachine,
+    eventController,
     renderLoop,
     finalPass,
 } from '@shxnovel/canoe';
@@ -60,48 +61,44 @@ export class GameView extends LitElement implements GameViewHost {
         return this._controller.gameContext;
     }
 
-    private _unsubscribe: () => void = () => { };
     private _rafId: number = 0;
 
-    // Runtime Event Listener
-    private _runtimeListener: RuntimeEventListener = {
-        onText: (data) => {
-            this._handleTick(data);
-            console.log('Text update:', data);
-        },
-        onAnimate: (data) => {
-            console.log('Animate update:', data);
-        },
-        onSystem(data) {
-            console.log('System update:', data);
-        },
-        onStateChange: (state) => {
-            console.log('Runtime State:', state);
-        },
+    // 事件处理回调，使用箭头函数绑定 this
+    private _handleTickEvent = (data: any) => {
+        this._handleTick(data);
+        console.log('[GameView] Tick Event Received:', data);
     };
 
     async connectedCallback(): Promise<void> {
         super.connectedCallback();
 
-        // 1. Subscribe to Runtime events
-        this._unsubscribe = runtime.subscribe(this._runtimeListener);
+        // 1. 订阅 Canoe 全局事件总线
+        eventController.on('tick', this._handleTickEvent);
 
         engine.useDefaultMainLoop = false;
 
         try {
+            // 2. 获取启动意图并解析上下文
             const intent = GameLauncher.consume();
             const context = await BootResolver.resolve(intent);
 
-            // Initialize final pass (requires RTManager which is ready after resolver)
+            // 3. 初始化最终渲染管线
             await finalPass.init();
 
-            await runtime.boot(context);
+            // 4. 根据上下文恢复或初始化 Session
+            if (context.mode === 'restore' && context.snapshot) {
+                await GameSession.restore(context.snapshot);
+            } else {
+                GameSession.reset();
+                GameSession.chapter = context.chapter;
+                GameSession.index = context.index;
+            }
 
-            // Auto-start the script
-            logger.info('Auto-starting script');
-            await runtime.resume();
+            // 5. 启动自动机
+            logger.info('[GameView] Starting CanoeMachine');
+            await canoeMachine.start();
         } catch (e) {
-            console.error(e);
+            console.error('[GameView] Boot failed:', e);
             Router.go('/menu');
         }
     }
@@ -125,49 +122,46 @@ export class GameView extends LitElement implements GameViewHost {
 
     disconnectedCallback() {
         super.disconnectedCallback();
-        this._unsubscribe();
+        
+        // 6. 清理
+        eventController.off('tick', this._handleTickEvent);
         cancelAnimationFrame(this._rafId);
-        runtime.reset(true);
+        GameSession.reset();
 
         engine.useDefaultMainLoop = true;
     }
 
     private _handleTick(data: SceneBlock['text']) {
-        const ShouldQuote = data[0].quote;
-        this.dialogue.useQuote = ShouldQuote;
+        if (!data || !this.dialogue) return;
+
+        // 设置说话人和引号样式
+        this.dialogue.useQuote = data.quote;
         this.dialogue.init();
 
         const solveText = (c: UnpackArray<TextUnit['content']>) => {
             if (typeof c === 'string') {
                 this.dialogue.addText(c);
             } else {
-                // Handle other text commands
                 switch (c.kind) {
-                    case 'pause':
-                        this.dialogue.addPause(c.args?.ms || 500);
+                    case 'wait':
+                        this.dialogue.addPause(c.ms || 500);
                         break;
-
                     case 'fast':
-                        this.dialogue.addInstantText(c.args?.str || '');
+                        this.dialogue.addInstantText(c.text || '');
                         break;
-
                     default:
-                        logger.error(`Unknown command: ${c.kind}`);
+                        logger.error(`Unknown text command: ${(c as any).kind}`);
                         break;
                 }
             }
         };
 
-        for (const item of data) {
-            if (item.type === 'text') {
-                const content = item.content;
-
-                if (Array.isArray(content)) {
-                    content.forEach(solveText);
-                } else if (typeof content === 'string') {
-                    this.dialogue.addText(content);
-                }
-            }
+        // 处理内容数组
+        const content = data.content;
+        if (Array.isArray(content)) {
+            content.forEach(solveText);
+        } else if (typeof content === 'string') {
+            this.dialogue.addText(content);
         }
 
         this.dialogue.play();

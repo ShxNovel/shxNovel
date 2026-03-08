@@ -8,6 +8,7 @@ import { logger } from '../../logger';
 import {
     VisualManager,
     CameraManager,
+    SceneManager,
 } from '../../resource';
 import { Pipeline } from '../../object/pipeline';
 import { TimelineBuilder } from '../../core/timeline-builder';
@@ -53,7 +54,10 @@ export class AnimateExecutor {
         }
 
         // 2. 同步构建 Master Timeline
-        const tl = TimelineBuilder.create() as Timeline;
+        // 增加 onUpdate 确保动画播放时每一帧都触发渲染
+        const tl = TimelineBuilder.create({
+            onUpdate: () => renderScheduler.requestRender()
+        }) as Timeline;
 
         for (const task of tasks) {
             const position = task.position; // timelabel 或 绝对时间
@@ -86,7 +90,7 @@ export class AnimateExecutor {
             const res = await this.getVisualAnim(kind, target, args);
             return { kind: 'visual', anim: res?.anim, position };
         } else if (target.startsWith('c_')) {
-            const res = await this.getCameraAnim(kind, target, args);
+            const res = await this.getCameraAnim(target, args);
             return { kind: 'camera', anim: res?.anim, position };
         }
 
@@ -149,7 +153,6 @@ export class AnimateExecutor {
         // 3. 进场/出场 (Stage Management)
         if (kind === 'enter') {
             const stageName = args?.into || 's_main';
-            const { SceneManager } = await import('../../resource/scene-manager');
             const stage = await SceneManager.get(stageName);
             tl.call(() => { stage.add(visual); }, 0);
         } else if (kind === 'leave') {
@@ -163,7 +166,6 @@ export class AnimateExecutor {
      * 处理相机（Camera）的动画
      */
     private static async getCameraAnim(
-        kind: string, 
         target: string, 
         args?: AnyAnimateProps
     ): Promise<{ anim: Timeline } | null> {

@@ -96,7 +96,18 @@ export function regVisual(name: string) {
 
         let uniforms: Record<string, UniformValue> = node.uniforms ??
         {
+            uTexA: { type: 'texture', value: null },
+            uTexB: { type: 'texture', value: null },
+            uMix: { type: 'number', value: 0 },
+
+            // Resolution uniforms for object-fit: cover
+            uResolution: { type: 'vec2', value: [1, 1] }, // Container (Mesh) size
+            uResA: { type: 'vec2', value: [1, 1] },       // Texture A size
+            uResB: { type: 'vec2', value: [1, 1] },       // Texture B size
+
             uBaseAlpha: { type: 'number', value: 1 },
+            uGroupAlpha: { type: 'number', value: 1 },
+            uTint: { type: 'color', value: 0xffffff }, // new THREE.Color(1, 1, 1)
         };
 
         let vertexShader = node.vertexShader?.name

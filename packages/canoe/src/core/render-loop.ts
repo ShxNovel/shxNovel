@@ -4,7 +4,8 @@ import { renderScheduler } from './render-scheduler';
 import { finalPass } from './final-pass';
 import { Pipeline } from '../object/pipeline';
 import { MainRenderer } from './main-renderer';
-import { CameraManager, SceneManager } from '../resource';
+import { CameraManager, SceneManager, TextureManager, VisualManager } from '../resource';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 class RenderLoop {
     loopBlock = false;
@@ -17,9 +18,8 @@ class RenderLoop {
     /**
      * Enable debug OrbitControls for a camera
      */
-    async enableOrbit(cameraName: string = 'co_main') {
+    async enableOrbit(cameraName: string = 'c_main') {
         const canoeCam = await CameraManager.get(cameraName);
-        const { OrbitControls } = await import('three/examples/jsm/controls/OrbitControls.js');
 
         this.controls = new OrbitControls(canoeCam.cam, MainRenderer.domElement);
         console.log(`[Debug] OrbitControls enabled for ${cameraName}`);
@@ -69,7 +69,6 @@ class RenderLoop {
      * Directly load a texture and add it to s_main
      */
     async debugImage(path: string = 'tex_p0') {
-        const { TextureManager } = await import('../resource/texture-manager');
         const scene = await SceneManager.get('s_main');
 
         console.log(`[Debug] Loading image directly: ${path}`);
@@ -95,7 +94,6 @@ class RenderLoop {
      * Test a VisualObject by adding it to s_main
      */
     async debugVisual(visualName: string = 'v_bg') {
-        const { VisualManager } = await import('../resource/visual-manager');
         const scene = await SceneManager.get('s_main');
 
         console.log(`[Debug] Creating visual: ${visualName}`);
@@ -116,7 +114,6 @@ class RenderLoop {
      * List and apply expressions for a VisualObject
      */
     async debugExpr(visualName: string, exprName?: string) {
-        const { VisualManager } = await import('../resource/visual-manager');
         const visual = await VisualManager.get(visualName);
 
         // @ts-ignore - Access private exprMap for debugging

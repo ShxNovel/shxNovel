@@ -5,6 +5,7 @@ import {
     CanoeOrthographicCamera, 
     CanoePerspectiveCamera 
 } from '../object/camera';
+import type { CameraIR } from '@shxnovel/schema';
 
 export class CameraManager {
     static pool = new Map<string, Promise<AbstractCanoeCamera<any>>>();
@@ -36,8 +37,12 @@ export class CameraManager {
         }
 
         const loadingTask = (async () => {
-            const ir = await WorldManager.get(key);
+            const ir = await WorldManager.get<CameraIR>(key);
             
+            if (ir.type !== 'camera') {
+                throw new Error(`Resource ${key} is not a camera`);
+            }
+
             let canoeCam: AbstractCanoeCamera<any>;
 
             if (ir.kind === 'orthographic') {
@@ -48,7 +53,8 @@ export class CameraManager {
                     bottom: ir.bottom,
                     near: ir.near,
                     far: ir.far,
-                    aspect: ir.aspect
+                    // @ts-ignore TODO: add aspect to schema if needed
+                    aspect: (ir as any).aspect
                 });
             } else if (ir.kind === 'perspective') {
                 canoeCam = new CanoePerspectiveCamera(ir.name, {
@@ -58,14 +64,16 @@ export class CameraManager {
                     far: ir.far
                 });
             } else {
-                throw new Error(`Resource ${key} is not a camera IR`);
+                throw new Error(`Resource ${key} has an unknown camera kind`);
             }
 
             if (ir.zoom) canoeCam.cam.zoom = ir.zoom;
 
             // Apply initial state from IR if present
-            if (ir.pos) canoeCam.position.set(ir.pos[0], ir.pos[1], ir.pos[2]);
-            if (ir.rot) canoeCam.rotation.set(ir.rot[0], ir.rot[1], ir.rot[2]);
+            // @ts-ignore TODO: add pos and rot to schema if needed
+            if ((ir as any).pos) canoeCam.position.set((ir as any).pos[0], (ir as any).pos[1], (ir as any).pos[2]);
+            // @ts-ignore TODO: add pos and rot to schema if needed
+            if ((ir as any).rot) canoeCam.rotation.set((ir as any).rot[0], (ir as any).rot[1], (ir as any).rot[2]);
 
             canoeCam.cam.updateProjectionMatrix();
             canoeCam.updateMatrices();

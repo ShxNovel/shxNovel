@@ -18,9 +18,13 @@ class RenderScheduler {
     }
 
     shouldRender() {
-        shxActions.test().some(Boolean) && (this.dirty = true);
-        // return 1;
-        return this.dirty || this.activeAnimations > 0;
+        // shxActions.test().some(Boolean) && (this.dirty = true);
+        // return this.dirty || this.activeAnimations > 0;
+
+        // DEBUG: Force rendering every frame
+        this.dirty;
+        shxActions;
+        return true;
     }
 
     consume() {
@@ -30,3 +34,4 @@ class RenderScheduler {
 
 /** Decide when to render */
 export const renderScheduler = new RenderScheduler();
+

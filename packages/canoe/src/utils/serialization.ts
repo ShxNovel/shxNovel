@@ -31,8 +31,12 @@ export async function deserializeUniformValue(
     const { type, value } = data;
 
     if (type === 'texture') {
-        const tex = await TextureManager.get(value);
-        uniform.value = tex;
+        if (value === null || value === undefined) {
+            uniform.value = null;
+        } else {
+            const tex = await TextureManager.get(value);
+            uniform.value = tex;
+        }
         return;
     }
 

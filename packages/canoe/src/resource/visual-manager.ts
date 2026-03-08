@@ -1,9 +1,10 @@
 import { logger } from '../logger';
 import { WorldManager } from './world-manager';
 import { VisualObject } from '../object/visual-object';
+import type { VisualIR } from '@shxnovel/schema';
 
 export class VisualManager {
-    private static irPool = new Map<string, Promise<any>>();
+    private static irPool = new Map<string, Promise<VisualIR>>();
     private static instancePool = new Map<string, VisualObject>();
 
     /**
@@ -15,9 +16,9 @@ export class VisualManager {
             return;
         }
 
-        const loadingTask = WorldManager.get(key)
+        const loadingTask = WorldManager.get<VisualIR>(key)
             .then((ir) => {
-                if (ir.kind !== 'visual') {
+                if (ir.type !== 'visual') {
                     throw new Error(`Resource ${key} is not a visual`);
                 }
                 return ir;

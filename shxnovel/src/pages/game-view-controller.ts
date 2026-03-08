@@ -1,5 +1,5 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
-import { runtime } from '@shxnovel/canoe';
+import { canoeMachine } from '@shxnovel/canoe';
 import { GameDialogue } from '../components/game/game-dialogue';
 import { logger } from '@shxnovel/canoe/logger.js';
 
@@ -112,9 +112,9 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
-        const state = runtime.getState();
-        if (state === 'paused' || state === 'ready') {
-            runtime.resume();
+        const status = canoeMachine.getStatus();
+        if (status === 'waiting' || status === 'idle') {
+            canoeMachine.next();
         }
     };
 

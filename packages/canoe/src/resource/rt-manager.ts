@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { logger } from '../logger';
 import { WorldManager } from './world-manager';
+import type { RenderTargetIR } from '@shxnovel/schema';
 
 export class RTManager {
     static pool = new Map<string, Promise<THREE.WebGLRenderTarget>>();
@@ -16,9 +17,9 @@ export class RTManager {
         }
 
         const loadingTask = (async () => {
-            const ir = await WorldManager.get(key);
+            const ir = await WorldManager.get<RenderTargetIR>(key);
             
-            if (ir.kind !== 'RT') {
+            if (ir.type !== 'render-target') {
                 throw new Error(`Resource ${key} is not a render target`);
             }
 

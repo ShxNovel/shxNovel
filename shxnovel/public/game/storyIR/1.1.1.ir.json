@@ -1,0 +1,42 @@
+[
+  {"type": "flag", "name": "start", "meta": {"debug": "1.1.1.ts:9:1"}},
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["静谧的森林中，温和的阳光从树叶的空隙间筛落下来。"]},
+    "animate": [
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p0"]}},
+      {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}}
+    ],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": "卡咖喱", "quote": true, "content": ["滴答。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p1"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["一阵水声突然响彻其间。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p2"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": "卡咖喱", "quote": true, "content": ["神人 —— 正张大了嘴呆站在那里。"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p3"], "duration": 1000}}],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["是一个女孩。他的眼前有个全裸的女孩。"]},
+    "animate": [{"kind": "leave", "target": "v_bg", "args": {}}],
+    "system": [],
+    "meta": {}
+  },
+  {"type": "jump", "target": "start2", "meta": {"debug": "1.1.1.ts:27:1"}}
+]

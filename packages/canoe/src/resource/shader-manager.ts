@@ -1,15 +1,11 @@
-import * as THREE from 'three';
 import { logger } from '../logger';
 import { ManifestManager } from './manifest-manager';
 import { loadJson } from '../utils/loadFile';
-import { deserializeUniformValue } from '../utils/serialization';
 import type { ShaderIR } from '@shxnovel/schema';
 
 export interface ShaderResource {
     name: string;
-    vertexShader: string;
-    fragmentShader: string;
-    uniforms: Record<string, THREE.IUniform>;
+    code: string;
 }
 
 export class ShaderManager {
@@ -19,7 +15,7 @@ export class ShaderManager {
 
     /**
      * Ensure a shader is loaded.
-     * @param key - World shader name (e.g., 'sh_defaultNode')
+     * @param key - World shader name (e.g., 'sh_autoFragment')
      */
     static ensure(key: string | { name: string }): void {
         const actualKey = typeof key === 'string' ? key : key.name;
@@ -37,30 +33,9 @@ export class ShaderManager {
                 const irPath = `${this.world_base}/${resource.path}`;
                 const ir = await loadJson<ShaderIR>(irPath);
 
-                const uniforms: Record<string, THREE.IUniform> = {};
-                const promises: Promise<void>[] = [];
-
-                for (const [uName, uData] of Object.entries(ir.uniforms)) {
-                    // Create a placeholder uniform
-                    const uniform: THREE.IUniform = { value: null };
-                    uniforms[uName] = uniform;
-
-                    if (uData.type === 'texture' && uData.value === null) {
-                        // Keep value as null
-                        continue;
-                    }
-
-                    // For other types (or non-null textures), try to deserialize
-                    promises.push(deserializeUniformValue(uniform, uData as any));
-                }
-
-                await Promise.all(promises);
-
                 const result: ShaderResource = {
                     name: ir.name,
-                    vertexShader: ir.vertex,
-                    fragmentShader: ir.fragment,
-                    uniforms: uniforms
+                    code: ir.code
                 };
 
                 return result;

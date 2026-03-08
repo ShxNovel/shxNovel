@@ -1,8 +1,9 @@
 import { logger } from '../logger';
 import { WorldManager } from './world-manager';
+import type { PipelineIR } from '@shxnovel/schema';
 
 export class PipelineManager {
-    static pool = new Map<string, Promise<any>>();
+    static pool = new Map<string, Promise<PipelineIR>>();
 
     /**
      * Ensure a pipeline resource is loaded
@@ -14,8 +15,8 @@ export class PipelineManager {
             return;
         }
 
-        const loadingTask = WorldManager.get(key).then(ir => {
-            if (ir.kind !== 'pipeline') {
+        const loadingTask = WorldManager.get<PipelineIR>(key).then(ir => {
+            if (ir.type !== 'pipeline') {
                 throw new Error(`Resource ${key} is not a pipeline`);
             }
             return ir;
@@ -33,7 +34,7 @@ export class PipelineManager {
      * Get a pipeline IR
      * @param key - The pipeline name in manifest
      */
-    static async get(key: string): Promise<any> {
+    static async get(key: string): Promise<PipelineIR> {
         this.ensure(key);
         return this.pool.get(key)!;
     }

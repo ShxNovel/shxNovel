@@ -6,6 +6,11 @@ export interface TimelineOptions {
      * Custom onComplete callback when the whole block finishes.
      */
     onComplete?: () => void;
+
+    /**
+     * Custom onUpdate callback for every frame.
+     */
+    onUpdate?: () => void;
 }
 
 export class TimelineBuilder {
@@ -27,6 +32,9 @@ export class TimelineBuilder {
             autoplay: false, // IMPORTANT: Prevent auto-playing
             onComplete: () => {
                 options.onComplete?.();
+            },
+            onUpdate: () => {
+                options.onUpdate?.();
             }
         });
 

@@ -1,0 +1,12 @@
+{
+  "name": "c_main",
+  "type": "camera",
+  "kind": "orthographic",
+  "left": -960,
+  "right": 960,
+  "top": 540,
+  "bottom": -540,
+  "near": 0.1,
+  "far": 2000,
+  "zoom": 1
+}

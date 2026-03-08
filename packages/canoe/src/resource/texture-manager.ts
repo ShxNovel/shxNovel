@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { logger } from '../logger';
 import { ManifestManager } from './manifest-manager';
 import { loadJson } from '../utils/loadFile';
+import type { TextureIR } from '@shxnovel/schema';
 
 export class TextureManager {
     static loader = new THREE.TextureLoader();
@@ -30,14 +31,14 @@ export class TextureManager {
             if (resource && resource.type === 'texture') {
                 // Load from WorldIR
                 const irPath = `${this.world_base}/${resource.path}`;
-                const ir = await loadJson(irPath);
+                const ir = await loadJson<TextureIR>(irPath);
 
                 // Assuming ir.variants is a single key for now if it's not an object
                 // In a real VN, we might need to handle variants properly
                 const textureFile =
                     typeof ir.variants === 'string'
                         ? ir.variants
-                        : (ir.variants as any).default || Object.values(ir.variants)[0];
+                        : (ir.variants as any).default || Object.values(ir.variants as Record<string, any>)[0];
 
                 const src = `${this.asset_base}/${textureFile}`;
                 const tex = await this.loader.loadAsync(src);

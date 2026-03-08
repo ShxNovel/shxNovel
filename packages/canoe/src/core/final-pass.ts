@@ -68,27 +68,27 @@ class FinalPass {
 
         // We will apply this viewport during render
         this.lastViewport = new THREE.Vector4(offsetX, offsetY, renderWidth, renderHeight);
+        this.fullWindowViewport = new THREE.Vector4(0, 0, width, height);
 
         MainRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     }
 
     private lastViewport = new THREE.Vector4(0, 0, 1920, 1080);
+    private fullWindowViewport = new THREE.Vector4(0, 0, 1920, 1080);
 
     render(renderer: THREE.WebGLRenderer) {
         if (!this.material.map) return;
 
-        // Render to screen
+        // 1. Render to screen (null target)
         renderer.setRenderTarget(null);
 
-        // CRITICAL: Disable scissor test and ensure we use the full internal canvas resolution
+        // 2. Clear entire window with black (for bars)
+        renderer.setViewport(this.fullWindowViewport);
         renderer.setScissorTest(false);
-
-        // Clear background (the black bars)
         renderer.setClearColor(0x000000, 1);
         renderer.clear();
 
-        // Map the 1920x1080 RT to the current viewport (pillarbox/letterbox)
-        // Three.js will automatically apply the current pixelRatio to this logical viewport.
+        // 3. Render the 1920x1080 RT into the correctly aspect-scaled viewport
         renderer.setViewport(this.lastViewport);
         renderer.render(this.scene, this.camera);
     }
