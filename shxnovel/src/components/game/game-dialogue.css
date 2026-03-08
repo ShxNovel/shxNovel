@@ -1,83 +1,94 @@
 .content {
-    /* position: absolute; */
-    display: inline-block;
-    width: 70%;
-    word-break: break-all;
-    margin: 3rem 0 0 20rem;
-    overflow: visible;
-    color: #ede1ea;
-    --var-col: #2d3a87;
+  /* position: absolute; */
+  display: inline-block;
+  width: 70%;
+  word-break: break-all;
+  margin: 5rem 0 0 20rem;
+  overflow: visible;
+  color: #ede1ea;
+  --var-col: #2d3a87;
 }
 
 .content_html {
-    overflow: visible;
-    line-height: 2.66rem;
-    font-size: 1.33rem;
-    font-family: 'SarasaMonoSC';
+  overflow: visible;
+  line-height: 2.66rem;
+  font-size: 1.33rem;
+  font-family: "SarasaMonoSC";
 
-    text-shadow:
-        0.06rem 0.06rem 0.1rem var(--var-col),
-        -0.06rem -0.06rem 0.1rem var(--var-col),
-        -0.06rem 0.06rem 0.1rem var(--var-col),
-        0.06rem -0.06rem 0.1rem var(--var-col);
-    overflow: visible;
+  text-shadow:
+    0.06rem 0.06rem 0.1rem var(--var-col),
+    -0.06rem -0.06rem 0.1rem var(--var-col),
+    -0.06rem 0.06rem 0.1rem var(--var-col),
+    0.06rem -0.06rem 0.1rem var(--var-col);
+  overflow: visible;
 
-    white-space: pre;
-    display: inline-block;
-    transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+  white-space: pre;
+  display: inline-block;
+  transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
 .content_cursor {
-    position: absolute;
-    right: 5rem;
-    bottom: 5rem;
-    color: black;
-    display: none;
-    animation: content_cursor 1s infinite;
+  position: absolute;
+  right: 5rem;
+  bottom: 5rem;
+  color: black;
+  display: none;
+  animation: content_cursor 1s infinite;
 }
 
 @keyframes content_cursor {
-    0% {
-        opacity: 0;
-    }
+  0% {
+    opacity: 0;
+  }
 
-    50% {
-        opacity: 1;
-    }
+  50% {
+    opacity: 1;
+  }
 
-    100% {
-        opacity: 0;
-    }
+  100% {
+    opacity: 0;
+  }
 }
 
 .contentFadeIn {
-    display: inline-block;
-    position: relative;
-    line-height: 2.66rem;
-    font-size: 1.33rem;
-    font-family: 'SarasaMonoSC';
+  display: inline-block;
+  position: relative;
+  line-height: 2.66rem;
+  font-size: 1.33rem;
+  font-family: "SarasaMonoSC";
 
-    text-shadow:
-        0.1rem 0.1rem 0.15rem var(--var-col),
-        -0.1rem -0.1rem 0.15rem var(--var-col),
-        -0.1rem 0.1rem 0.15rem var(--var-col),
-        0.1rem -0.1rem 0.15rem var(--var-col);
-    overflow: visible;
+  text-shadow:
+    0.1rem 0.1rem 0.15rem var(--var-col),
+    -0.1rem -0.1rem 0.15rem var(--var-col),
+    -0.1rem 0.1rem 0.15rem var(--var-col),
+    0.1rem -0.1rem 0.15rem var(--var-col);
+  overflow: visible;
 
-    white-space: pre;
-    display: inline-block;
-    transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
-    animation: 0.3s contentFadeIn cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
+  white-space: pre;
+  display: inline-block;
+  transition: 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+  animation: 0.3s contentFadeIn cubic-bezier(0.075, 0.82, 0.165, 1) forwards;
 }
 
 @keyframes contentFadeIn {
-    0% {
-        transform: translateX(3000px);
-        transform: translateY(-20px);
-    }
+  0% {
+    transform: translateX(3000px);
+    transform: translateY(-20px);
+  }
 
-    100% {
-        transform: translateX(0px);
-        transform: translateY(0px);
-    }
+  100% {
+    transform: translateX(0px);
+    transform: translateY(0px);
+  }
+}
+
+.speaker-name {
+  position: absolute;
+  width: fit-content;
+  color: white;
+  background: #00000050;
+  font-size: 1.5rem;
+  padding: 0.5rem 1rem;
+  left: 18rem;
+  border-radius: 0.2rem;
 }

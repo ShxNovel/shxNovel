@@ -9,21 +9,16 @@
     <link rel="stylesheet" href="/web/css/common.css">
 </head>
 
-
-<script type="module" src="./src/router.ts"></script>
-
 <body>
+    <!-- 路由出口 -->
+    <div id="game-outlet" style="height: 100%;"></div>
 
-    <script type="module" src="./src/components/vn-confirm-dialog.ts"></script>
+    <!-- 全局确认对话框 -->
     <vn-confirm-dialog></vn-confirm-dialog>
 
-    <body>
-        <div id="game-outlet" style="height: 100%;"></div>
-    </body>
-
+    <!-- 脚本加载 -->
+    <script type="module" src="./src/router.ts"></script>
+    <script type="module" src="./index.ts"></script>
 </body>
-
-<script type="module" src="./index.ts"></script>
-
 
 </html>

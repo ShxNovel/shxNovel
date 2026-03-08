@@ -24,7 +24,7 @@
       "lit": "^3.3.2",
       "@lit/context": "^1.1.6",
       "@vaadin/router": "^2",
-      "@lion/ui": "^0.15.5",
+      "@lion/ui": "^0.16.1",
       "typescript": "^5.9.3",
       "vite": "^7",
       "vitest": "^4",

@@ -20,6 +20,7 @@ import {
     eventController,
     renderLoop,
     finalPass,
+    HistoryManager,
 } from '@shxnovel/canoe';
 
 import type { SceneBlock, TextUnit } from '@shxnovel/rewrite';
@@ -116,16 +117,19 @@ export class GameView extends LitElement implements GameViewHost {
             // 3. 初始化最终渲染管线
             await finalPass.init();
 
-            // 4. 根据上下文恢复或初始化 Session
+            // 4. 初始化 Session 和 历史记录
+            GameSession.reset();
+            HistoryManager.clear(); // 核心修复：开始新会话时清空回溯栈
+
+            // 5. 根据上下文恢复或初始化 Session
             if (context.mode === 'restore' && context.snapshot) {
                 await GameSession.restore(context.snapshot);
             } else {
-                GameSession.reset();
                 GameSession.chapter = context.chapter;
                 GameSession.index = context.index;
             }
 
-            // 5. 启动自动机
+            // 6. 启动自动机
             logger.info('[GameView] Starting CanoeMachine');
             await canoeMachine.start();
         } catch (e) {
@@ -154,7 +158,7 @@ export class GameView extends LitElement implements GameViewHost {
     disconnectedCallback() {
         super.disconnectedCallback();
         
-        // 6. 清理
+        // 7. 清理
         eventController.off('tick', this._handleTickEvent);
         cancelAnimationFrame(this._rafId);
         GameSession.reset();
@@ -167,6 +171,7 @@ export class GameView extends LitElement implements GameViewHost {
 
         // 设置说话人和引号样式
         this.dialogue.useQuote = data.quote;
+        this.dialogue.speakerName = data.name; // 关键：同步说话人名字
         this.dialogue.init();
 
         const solveText = (c: UnpackArray<TextUnit['content']>) => {

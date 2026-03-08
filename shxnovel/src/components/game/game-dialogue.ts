@@ -17,6 +17,7 @@ export class GameDialogue extends LitElement {
     @query('.content_cursor') cursorElement?: HTMLElement;
 
     @property({ type: Boolean }) useQuote = true;
+    @property({ type: String }) speakerName: string | null = null;
 
     instance?: TypewriterClass;
     plainText = '';
@@ -165,14 +166,14 @@ export class GameDialogue extends LitElement {
         return el;
     };
 
-    firstUpdated() {
-        // this.init();
-        // this.addText(`嗯——。地底鸦原来是吞噬了八咫乌的力量呢。\n那么强的神明应该能收集到不少信仰呢……\n`);
-        // this.addText('果然我家神社的神明也得有点比较体贴明了的恩惠才对');
-        // this.play();
-    }
-
     render() {
-        return html`<div class="content"></div>`;
+        return html`
+            ${this.speakerName ? html`
+                <div class="speaker-container">
+                    <span class="speaker-name">${this.speakerName}</span>
+                </div>
+            ` : ''}
+            <div class="content"></div>
+        `;
     }
 }

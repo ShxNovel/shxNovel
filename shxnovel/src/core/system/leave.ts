@@ -12,6 +12,15 @@ export function initConfirmBox(ele: ConfirmBox) {
     comfirmBox = ele;
 }
 
+export async function askConfirm(message: string, title?: string): Promise<boolean> {
+    const dialog = document.querySelector('vn-confirm-dialog') as any;
+    if (!dialog) {
+        console.warn('[askConfirm] vn-confirm-dialog not found in DOM, falling back to native confirm.');
+        return confirm(message);
+    }
+    return await dialog.ask(message, title);
+}
+
 export function setConfirmBoxActiveStatus(ok = true) {
     useConfirmBox = ok;
 }
@@ -25,16 +34,8 @@ async function solveClose() {
     if (isTauri()) {
         const appWebview = getCurrentWindow();
         return await appWebview.listen(TauriEvent.WINDOW_CLOSE_REQUESTED, async () => {
-            if (comfirmBox && useConfirmBox) {
-                // lion bug
-                const dialog = document.querySelector('vn-confirm-dialog') as any;
-
-                if (!dialog) {
-                    console.error('no confirm dialog found');
-                    return;
-                }
-
-                let res = await dialog.ask('是否退出游戏?');
+            if (useConfirmBox) {
+                let res = await askConfirm('是否退出游戏?');
                 if (res) await decideExitGame();
             } else {
                 await decideExitGame();
@@ -42,7 +43,7 @@ async function solveClose() {
         });
     }
 
-    return () => {};
+    return () => { };
 }
 
 const unlisten = await solveClose();

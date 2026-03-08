@@ -6,6 +6,7 @@ import { HistoryManager, GameSession, SessionState } from '@shxnovel/canoe';
 // @ts-ignore
 import inlineStyles from './game-backlog.css?inline';
 import { TextOp } from '@shxnovel/schema';
+import { askConfirm } from '../../core';
 
 @customElement('game-backlog')
 export class GameBacklog extends LitElement {
@@ -31,10 +32,11 @@ export class GameBacklog extends LitElement {
         this.dispatchEvent(new CustomEvent('close', { bubbles: true, composed: true }));
     }
 
-    private async _jumpTo(state: SessionState) {
-        const confirmed = confirm('是否要跳回到这段剧情？');
+    private async _requestJump(state: SessionState) {
+        // 调用全局统一样式的确认框
+        const confirmed = await askConfirm('确定要跳转回这段剧情吗？', '剧情回溯');
+
         if (confirmed) {
-            // 关键：使用 jumpBackTo 确保历史栈被同步截断
             await HistoryManager.jumpBackTo(state);
             this._close();
         }
@@ -48,20 +50,20 @@ export class GameBacklog extends LitElement {
             </div>
             <div class="content">
                 ${repeat(this._logs, (log, idx) => `${log.chapter}-${log.index}-${idx}`, (log) => {
-                    const textData = log.lastText;
+            const textData = log.lastText;
 
-                    if (!textData) {
-                        console.warn('[Backlog] Found history item without textData:', log);
-                        return html``;
-                    }
+            if (!textData) {
+                console.warn('[Backlog] Found history item without textData:', log);
+                return html``;
+            }
 
-                    return html`
-                        <div class="log-item" @click=${() => this._jumpTo(log)}>
+            return html`
+                        <div class="log-item" @click=${() => this._requestJump(log)}>
                             <div class="speaker">${textData.name || '旁白'}</div>
                             <div class="text">${this._extractRawText(textData.content)}</div>
                         </div>
                     `;
-                })}
+        })}
                 ${this._logs.length === 0 ? html`<div style="text-align:center; padding: 4rem; opacity: 0.5;">暂无历史记录</div>` : ''}
             </div>
         `;
