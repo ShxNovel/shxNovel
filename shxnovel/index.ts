@@ -1,14 +1,8 @@
 import { solveResize } from './src/core';
 import { GameStorage } from '@shxnovel/canoe';
+import { AppStorageDriver } from './src/core/system/storage-driver';
 
 solveResize();
 
-GameStorage.save = async (saveId, data) => {
-    console.log('Saving game data:', { saveId, data });
-    return Promise.resolve();
-};
-
-GameStorage.load = async (saveId) => {
-    console.log('Loading game data:', { saveId });
-    return Promise.resolve({});
-};
+// 初始化存档驱动
+GameStorage.setDriver(new AppStorageDriver());

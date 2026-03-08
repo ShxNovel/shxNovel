@@ -168,22 +168,30 @@ export class GameView extends LitElement implements GameViewHost {
     }
 
     render() {
+        const ctrl = this._controller;
+        
         const uiClasses = {
             'ui-layer': true,
-            'ui-hidden': this._controller.uiHidden,
+            'ui-hidden': ctrl.uiHidden,
+            'auto-active': ctrl.isAuto,
+            'fast-active': ctrl.isFast,
         };
 
-        const ctrl = this._controller;
-
         return html`
-            <div class="body">
+            <div class="body ${classMap({ 'is-fast': ctrl.isFast })}">
                 <game-top-menu class=${classMap(uiClasses)} @click=${ctrl.stopProp}></game-top-menu>
 
                 <div class="CanvasBox"></div>
 
+                <!-- 可以在这里增加一个全局的状态提示，例如 Skip 标志 -->
+                ${ctrl.isFast ? html`<div class="skip-indicator">SKIP >>></div>` : ''}
+                ${ctrl.isAuto ? html`<div class="auto-indicator">AUTO</div>` : ''}
+
                 <div class="bottom ${classMap(uiClasses)}">
                     <game-dialogue></game-dialogue>
                     <game-bottom-tool
+                        .activeAuto=${ctrl.isAuto}
+                        .activeFast=${ctrl.isFast}
                         @click=${ctrl.stopProp}
                         @toggle=${ctrl.onToggle}
                         @backlog=${ctrl.onBacklog}

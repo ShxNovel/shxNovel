@@ -1,11 +1,14 @@
 [
-  {"type": "flag", "name": "start", "meta": {"debug": "1.1.1.ts:9:1"}},
+  {"type": "flag", "name": "start", "meta": {"debug": "1.1.1.ts:10:1"}},
   {
     "type": "tick",
     "text": {"name": null, "quote": false, "content": ["静谧的森林中，温和的阳光从树叶的空隙间筛落下来。"]},
     "animate": [
       {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p0"]}},
-      {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}}
+      {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"y": -500}}},
+      {"kind": "act", "target": "v_stand", "args": {"expr": ["body:s1"]}},
+      {"kind": "enter", "target": "v_stand", "args": {"into": "s_main"}}
     ],
     "system": [],
     "meta": {}
@@ -13,21 +16,33 @@
   {
     "type": "tick",
     "text": {"name": "卡咖喱", "quote": true, "content": ["滴答。"]},
-    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p1"], "duration": 1000}}],
+    "animate": [
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p1"], "duration": 1000}},
+      {"kind": "act", "target": "v_stand", "args": {"expr": ["body:s2"], "duration": 300}}
+    ],
     "system": [],
     "meta": {}
   },
   {
     "type": "tick",
     "text": {"name": null, "quote": false, "content": ["一阵水声突然响彻其间。"]},
-    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p2"], "duration": 1000}}],
+    "animate": [
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p2"], "duration": 1000}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"y": "+=100"}, "duration": 100}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"y": "-=100"}, "duration": 100}}
+    ],
     "system": [],
     "meta": {}
   },
   {
     "type": "tick",
     "text": {"name": "卡咖喱", "quote": true, "content": ["神人 —— 正张大了嘴呆站在那里。"]},
-    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["body:p3"], "duration": 1000}}],
+    "animate": [
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p3"], "duration": 1000}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"x": "+=50"}, "duration": 100}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"x": "-=100"}, "duration": 100}},
+      {"kind": "act", "target": "v_stand", "args": {"position": {"x": "+=50"}, "duration": 100}}
+    ],
     "system": [],
     "meta": {}
   },
@@ -38,5 +53,5 @@
     "system": [],
     "meta": {}
   },
-  {"type": "jump", "target": "start2", "meta": {"debug": "1.1.1.ts:27:1"}}
+  {"type": "jump", "target": "start2", "meta": {"debug": "1.1.1.ts:42:1"}}
 ]

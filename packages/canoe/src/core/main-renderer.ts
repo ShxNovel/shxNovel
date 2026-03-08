@@ -3,7 +3,7 @@ import { engine } from 'animejs';
 
 engine.defaults.autoplay = false;
 
-engine.defaults.composition = 'none';
+engine.defaults.composition = 'replace';
 
 /** default renderer */
 export const MainRenderer = new WebGLRenderer({

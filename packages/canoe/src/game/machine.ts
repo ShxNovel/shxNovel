@@ -6,6 +6,7 @@ import { TimelineBuilder } from '../core/timeline-builder';
 import { eventController } from '../core/MListener';
 import { logger } from '../logger';
 import { Pipeline } from '../object';
+import { HistoryManager } from './history-manager';
 
 export type MachineStatus = 'idle' | 'running' | 'waiting' | 'error';
 
@@ -27,7 +28,6 @@ export class CanoeMachine {
         this.instructions = await StoryManager.get(GameSession.chapter);
 
         // 关键修复：确保渲染管线已构建
-        // 如果 steps 为空，说明尚未初始化默认管线，这会导致画面全黑
         if (Pipeline.steps.length === 0) {
             logger.debug('[Machine] Initializing default pipeline');
             await Pipeline.build();
@@ -74,11 +74,13 @@ export class CanoeMachine {
 
         switch (ir.type) {
             case 'tick':
-                // 1. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
+                // 1. 在执行新 Tick 前推入历史快照
+                await HistoryManager.push();
+
+                // 2. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
                 TimelineBuilder.skip();
 
-                // 2. 同时分发系统指令和动画指令
-                // 注意：这里我们使用 await 确保资源准备好，但 executeAnimate 内部返回的是 timeline，不会阻塞播放
+                // 3. 同时分发系统指令和动画指令
                 await AnimateExecutor.executeSystem(ir.system);
                 const res = await AnimateExecutor.executeAnimate(ir.animate);
                 
@@ -86,7 +88,7 @@ export class CanoeMachine {
                     res.tl.play();
                 }
 
-                // 3. 抛出文本事件，由 UI 层（shxnovel）处理打字机和对话框显示
+                // 4. 抛出文本事件，由 UI 层（shxnovel）处理打字机和对话框显示
                 eventController.emit('tick', ir.text);
 
                 return true; // Tick 始终阻塞，直到用户调用 next()
@@ -151,7 +153,6 @@ export class CanoeMachine {
         try {
             /**
              * 评估条件表达式
-             * IR 里的 cond 格式通常为 "Condition() { return inGame.a > 1 ? 'ok' : 'fail'; }"
              */
             const evalFunc = new Function(
                 'ctx',

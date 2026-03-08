@@ -1,0 +1,37 @@
+{
+  "name": "v_stand",
+  "type": "visual",
+  "nodes": {
+    "body": {
+      "parent": "root",
+      "variants": {
+        "s1": {"use": {"type": "texture", "name": "tex_s1"}},
+        "s2": {"use": {"type": "texture", "name": "tex_s2"}}
+      },
+      "pos": [0, 0, 0],
+      "uniforms": {
+        "uTexA": {"type": "texture", "value": null},
+        "uTexB": {"type": "texture", "value": null},
+        "uMix": {"type": "number", "value": 0},
+        "uResolution": {"type": "vec2", "value": [1, 1]},
+        "uResA": {"type": "vec2", "value": [1, 1]},
+        "uResB": {"type": "vec2", "value": [1, 1]},
+        "uBaseAlpha": {"type": "number", "value": 1},
+        "uGroupAlpha": {"type": "number", "value": 1},
+        "uTint": {"type": "color", "value": 16777215}
+      },
+      "vertexShader": "sh_autoVertex",
+      "fragmentShader": "sh_autoFragment"
+    }
+  },
+  "exprs": {
+    "body:s1": {"target": "body", "variant": "s1"},
+    "body:s2": {"target": "body", "variant": "s2"},
+    "v#body": {"target": "body", "visible": true},
+    "u#body": {"target": "body", "visible": false},
+    "1#body": {"target": "body", "uniforms": {"uBaseAlpha": 1}},
+    "0#body": {"target": "body", "uniforms": {"uBaseAlpha": 0}},
+    "1#self": {"target": "self", "uniforms": {"uGroupAlpha": 1}},
+    "0#self": {"target": "self", "uniforms": {"uGroupAlpha": 0}}
+  }
+}

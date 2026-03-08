@@ -12,7 +12,7 @@ import {
 } from '../../resource';
 import { Pipeline } from '../../object/pipeline';
 import { TimelineBuilder } from '../../core/timeline-builder';
-import { createTimeline, type Timeline } from 'animejs';
+import { type Timeline } from 'animejs';
 import { renderScheduler } from '../../core';
 
 export class AnimateExecutor {
@@ -46,75 +46,55 @@ export class AnimateExecutor {
     static async executeAnimate(animate: AnimateIR): Promise<{ tl: Timeline } | null> {
         if (!animate || animate.length === 0) return null;
 
-        // 1. 异步解析所有动画单元（加载资源、获取实例）
-        const tasks: any[] = [];
-        for (const op of animate) {
-            const task = await this.resolveAnimOp(op);
-            if (task) tasks.push(task);
-        }
-
-        // 2. 同步构建 Master Timeline
-        // 增加 onUpdate 确保动画播放时每一帧都触发渲染
+        // 1. 同步构建 Master Timeline
         const tl = TimelineBuilder.create({
             onUpdate: () => renderScheduler.requestRender()
         }) as Timeline;
 
-        for (const task of tasks) {
-            const position = task.position; // timelabel 或 绝对时间
-
-            if (task.kind === 'timelabel') {
-                tl.label(task.name, position);
-            } else if (task.anim) {
-                // 将解析出的子动画同步到主时间轴
-                tl.sync(task.anim, position);
-            }
+        // 2. 异步解析并直接填充 Timeline (顺序填充)
+        for (const op of animate) {
+            await this.fillAnimOp(tl, op);
         }
 
         return { tl };
     }
 
     /**
-     * 解析单条动画指令
+     * 解析指令并直接填充 Timeline
      */
-    private static async resolveAnimOp(op: ExtAnimateOp): Promise<any> {
+    private static async fillAnimOp(tl: Timeline, op: ExtAnimateOp): Promise<void> {
         const { kind, target } = op;
         const args = (op as any).args as AnyAnimateProps | undefined;
         const position = args?.timelabel;
 
         if (kind === 'timelabel') {
-            return { kind: 'timelabel', name: target, position };
+            tl.label(target, position);
+            return;
         }
 
-        // 根据前缀分发给不同的资源管理器
+        // 分发给不同的资源管理器
         if (target.startsWith('v_')) {
-            const res = await this.getVisualAnim(kind, target, args);
-            return { kind: 'visual', anim: res?.anim, position };
+            await this.fillVisualAnim(tl, kind, target, args, position);
         } else if (target.startsWith('c_')) {
-            const res = await this.getCameraAnim(target, args);
-            return { kind: 'camera', anim: res?.anim, position };
+            await this.fillCameraAnim(tl, target, args, position);
+        } else {
+            logger.warn(`[Executor] Unknown animate target prefix: ${target}`);
         }
-
-        logger.warn(`[Executor] Unknown animate target prefix: ${target}`);
-        return null;
     }
 
     /**
-     * 处理视觉对象（Visual）的动画
+     * 填充视觉对象（Visual）的动画
      */
-    private static async getVisualAnim(
+    private static async fillVisualAnim(
+        tl: Timeline,
         kind: string, 
         target: string, 
-        args?: AnyAnimateProps
-    ): Promise<{ anim: Timeline } | null> {
+        args?: AnyAnimateProps,
+        position?: string | number
+    ): Promise<void> {
         const visual = await VisualManager.get(target);
         const duration = args?.duration ?? 0;
         const ease = args?.easing ?? 'inOutQuad';
-
-        const tl = createTimeline({
-            autoplay: false,
-            onUpdate: () => renderScheduler.requestRender(),
-            onComplete: () => renderScheduler.requestRender(),
-        });
 
         // 1. 基础变换 (Position, Scale, Rotation)
         const props: any = { duration, ease };
@@ -139,14 +119,13 @@ export class AnimateExecutor {
         }
 
         if (hasProp) {
-            tl.add(visual, props, 0);
+            tl.add(visual, props, position);
         }
 
         // 2. 表达式 (Expressions / Variants)
         if (args?.expr) {
             for (const expr of args.expr) {
-                const res = await visual.applyExpression(expr, { duration, ease });
-                if (res?.anim) tl.sync(res.anim, 0);
+                await visual.addExpressionAnim(tl, expr, { duration, ease, position });
             }
         }
 
@@ -154,30 +133,30 @@ export class AnimateExecutor {
         if (kind === 'enter') {
             const stageName = args?.into || 's_main';
             const stage = await SceneManager.get(stageName);
-            tl.call(() => { stage.add(visual); }, 0);
+            tl.add({
+                duration: 0,
+                onComplete: () => { stage.add(visual); }
+            }, position);
         } else if (kind === 'leave') {
-            tl.call(() => { visual.parent?.remove(visual); }, 0);
+            tl.add({
+                duration: 0,
+                onComplete: () => { visual.parent?.remove(visual); }
+            }, position);
         }
-
-        return { anim: tl };
     }
 
     /**
-     * 处理相机（Camera）的动画
+     * 填充相机（Camera）的动画
      */
-    private static async getCameraAnim(
+    private static async fillCameraAnim(
+        tl: Timeline,
         target: string, 
-        args?: AnyAnimateProps
-    ): Promise<{ anim: Timeline } | null> {
+        args?: AnyAnimateProps,
+        position?: string | number
+    ): Promise<void> {
         const canoeCam = await CameraManager.get(target);
         const duration = args?.duration ?? 0;
         const ease = args?.easing ?? 'inOutQuad';
-
-        const tl = createTimeline({
-            autoplay: false,
-            onUpdate: () => renderScheduler.requestRender(),
-            onComplete: () => renderScheduler.requestRender(),
-        });
 
         // 1. 相机位移
         const props: any = { duration, ease };
@@ -190,14 +169,21 @@ export class AnimateExecutor {
         }
 
         if (hasProp) {
-            tl.add(canoeCam, props, 0);
+            tl.add(canoeCam, props, position);
         }
 
         // 2. 相机特有属性 (Zoom / FOV)
         if (args?.zoom !== undefined) {
-            tl.sync(canoeCam.setZoom(args.zoom, duration, ease), 0);
+            // 注意：Camera.setZoom 仍然返回一个 timeline，我们需要改为 add 模式
+            // 这里我们手动添加 zoom 动画，或者稍后重构 Camera 类
+            tl.add(canoeCam.cam, {
+                zoom: args.zoom,
+                duration,
+                ease,
+                onUpdate: () => {
+                    canoeCam.cam.updateProjectionMatrix();
+                }
+            }, position);
         }
-
-        return { anim: tl };
     }
 }

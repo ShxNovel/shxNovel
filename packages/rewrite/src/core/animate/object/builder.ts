@@ -39,9 +39,9 @@ export function leaveBuilder(ref: AnyAnimateProps): LeaveBuilder {
 }
 
 export interface ActBuilder {
-    x(x: number): this;
-    y(y: number): this;
-    z(z: number): this;
+    x(x: number | string): this;
+    y(y: number | string): this;
+    z(z: number | string): this;
     pos(x: number, y: number, z?: number): this;
     scale(s: Vector3): this;
     rot(r: Vector3): this;

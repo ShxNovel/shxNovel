@@ -6,6 +6,7 @@ import { Pipeline } from '../object/pipeline';
 import { MainRenderer } from './main-renderer';
 import { CameraManager, SceneManager, TextureManager, VisualManager } from '../resource';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { TimelineBuilder } from './timeline-builder';
 
 class RenderLoop {
     loopBlock = false;
@@ -116,23 +117,22 @@ class RenderLoop {
     async debugExpr(visualName: string, exprName?: string) {
         const visual = await VisualManager.get(visualName);
 
-        // @ts-ignore - Access private exprMap for debugging
         const available = Array.from(visual.exprMap.keys());
         console.log(`[Debug] Visual ${visualName} available expressions:`, available);
 
         if (exprName) {
             console.log(`[Debug] Applying expression: ${exprName}`);
-            const res = await visual.applyExpression(exprName, {
+            
+            const tl = TimelineBuilder.create({
+                onUpdate: () => renderScheduler.requestRender()
+            });
+
+            await visual.addExpressionAnim(tl, exprName, {
                 duration: 1,
             });
 
-            if (res?.anim) {
-                // If it's a timeline, play it immediately
-                res.anim.play();
-                console.log(`[Debug] Expression animation started`);
-            } else {
-                console.warn(`[Debug] Expression ${exprName} returned no animation`);
-            }
+            tl.play();
+            console.log(`[Debug] Expression animation started`);
         }
 
         renderScheduler.requestRender();

@@ -1,282 +1,10 @@
 import * as THREE from 'three';
-import { createTimeline, type Timeline } from 'animejs';
+import { type Timeline } from 'animejs';
 import { renderScheduler } from '../core/render-scheduler';
-import { TextureManager } from '../resource/texture-manager';
-import { ShaderManager } from '../resource/shader-manager';
 import { proxyProp } from '../utils/decorators';
-import type { VisualIR, VisualNodeIR } from '@shxnovel/schema';
+import type { VisualIR } from '@shxnovel/schema';
 import { isColor } from '../utils/typeCheck';
-import { deserializeUniformValue, serializeUniformValue, type SerializedUniform } from '../utils/serialization';
-
-// import { logger } from '../logger';
-
-export class VisualNode {
-    public group: THREE.Group;
-    public mesh: THREE.Mesh;
-    public material: THREE.ShaderMaterial;
-    public currentVariant: string = '';
-
-    public ready: Promise<void>;
-
-    constructor(
-        public name: string,
-        public config: VisualNodeIR,
-        sharedUniforms: Record<string, THREE.IUniform>
-    ) {
-        this.group = new THREE.Group();
-        this.group.name = `node_${name}`;
-
-        if (config.pos) {
-            this.group.position.set(config.pos[0] || 0, config.pos[1] || 0, config.pos[2] || 0);
-        }
-
-        // Initialize with basic material, will be updated in initShader
-        this.material = new THREE.ShaderMaterial({
-            transparent: true,
-            side: THREE.DoubleSide,
-        });
-
-        const geometry = new THREE.PlaneGeometry(1, 1);
-        this.mesh = new THREE.Mesh(geometry, this.material);
-        this.group.add(this.mesh);
-
-        this.ready = this.initShader(sharedUniforms);
-    }
-
-    async initShader(sharedUniforms: Record<string, THREE.IUniform>) {
-        // Fetch actual GLSL code from ShaderManager
-        const [vShader, fShader] = await Promise.all([
-            ShaderManager.get(this.config.vertexShader),
-            ShaderManager.get(this.config.fragmentShader)
-        ]);
-
-        this.material.vertexShader = vShader.code;
-        this.material.fragmentShader = fShader.code;
-        
-        // Initialize uniforms from config
-        const uniforms: Record<string, THREE.IUniform> = {};
-        const promises: Promise<void>[] = [];
-
-        if (this.config.uniforms) {
-            for (const [uName, uData] of Object.entries(this.config.uniforms)) {
-                const uniform: THREE.IUniform = { value: null };
-                uniforms[uName] = uniform;
-                promises.push(deserializeUniformValue(uniform, uData as any));
-            }
-        }
-
-        await Promise.all(promises);
-        this.material.uniforms = uniforms;
-
-        // Merge shared uniforms
-        for (const [key, uniform] of Object.entries(sharedUniforms)) {
-            if (this.material.uniforms[key]) {
-                this.material.uniforms[key] = uniform;
-            }
-        }
-
-        // Init resolution if size is fixed
-        if (this.config.size) {
-            if (this.material.uniforms.uResolution) {
-                this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
-            }
-        }
-    }
-
-    async initVariant(variantName: string) {
-        const Handle = this.config.variants[variantName];
-        if (!Handle) return;
-
-        let texture;
-
-        switch (Handle.use.type) {
-            case 'texture':
-                texture = await TextureManager.get(Handle.use.name);
-                break;
-        }
-
-        if (!texture) return;
-
-        if (this.material.uniforms.uTexA) this.material.uniforms.uTexA.value = texture;
-        if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
-        this.currentVariant = variantName;
-
-        const img = texture.image as undefined | HTMLImageElement;
-        const width = img?.width || 1;
-        const height = img?.height || 1;
-
-        // Set texture resolution
-        if (this.material.uniforms.uResA) this.material.uniforms.uResA.value.set(width, height);
-
-        if (img && width > 0 && height > 0) {
-            this.mesh.scale.set(width, height, 1);
-            if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(width, height);
-        }
-
-        if (this.config.size) {
-            this.mesh.scale.set(this.config.size[0], this.config.size[1], 1);
-            if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(this.config.size[0], this.config.size[1]);
-        }
-
-        this.mesh.updateMatrix();
-    }
-
-    /**
-     * Returns a Timeline for variant switching
-     * Logic: Normalizes state to uMix = 0 via callbacks to prevent Anime.js property overrides.
-     */
-    async switchToVariant(
-        variantName: string,
-        duration: number = 0,
-        ease: string = 'inOutQuad'
-    ): Promise<{ anim: Timeline } | null> {
-
-        await this.ready;
-
-        const Handle = this.config.variants[variantName];
-        if (!Handle) return null;
-
-        let texture;
-
-        if (Handle.use.type === 'texture') {
-            texture = await TextureManager.get(Handle.use.name);
-        } else {
-            throw new Error(`Unsupported variant kind: ${Handle.use.type}`);
-        }
-
-        const img = texture.image as HTMLImageElement;
-        const width = img?.width || 1;
-        const height = img?.height || 1;
-
-        const finalize = () => {
-            if (this.material.uniforms.uTexA) this.material.uniforms.uTexA.value = texture;
-            if (this.material.uniforms.uResA) this.material.uniforms.uResA.value.set(width, height);
-            if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
-            this.currentVariant = variantName;
-
-            if (!this.config.size) {
-                this.mesh.scale.set(width, height, 1);
-                if (this.material.uniforms.uResolution) this.material.uniforms.uResolution.value.set(width, height);
-            }
-        };
-
-        const tl = createTimeline({
-            autoplay: false,
-            // 1. Pre-Normalization: Ensure we start from uMix=0
-            onBegin: () => {
-                if (this.material.uniforms.uMix && this.material.uniforms.uMix.value > 0.5) {
-                    if (this.material.uniforms.uTexA && this.material.uniforms.uTexB) {
-                        this.material.uniforms.uTexA.value = (this.material.uniforms.uTexB.value as THREE.Texture);
-                    }
-                    if (this.material.uniforms.uResA && this.material.uniforms.uResB) {
-                        this.material.uniforms.uResA.value.copy(this.material.uniforms.uResB.value);
-                    }
-                }
-                if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 0;
-                if (this.material.uniforms.uTexB) this.material.uniforms.uTexB.value = texture;
-                if (this.material.uniforms.uResB) this.material.uniforms.uResB.value.set(width, height);
-            }
-        });
-
-        if (this.currentVariant === variantName) {
-            tl.call(finalize);
-            return { anim: tl };
-        }
-
-        // 2. Drive the transition (A -> B)
-        if (duration > 0 && this.material.uniforms.uMix) {
-            tl.add(this.material.uniforms.uMix, {
-                value: 1,
-                duration,
-                ease,
-                onComplete: finalize
-            });
-        } else {
-            tl.call(() => {
-                if (this.material.uniforms.uMix) this.material.uniforms.uMix.value = 1;
-                finalize();
-            });
-        }
-
-        return { anim: tl };
-    }
-
-    setUniform(
-        name: string,
-        value: any,
-        duration: number = 0,
-        ease: string = 'inOutQuad'
-    ): Timeline | null {
-
-        const uniform = this.material.uniforms[name];
-        if (!uniform) return null;
-
-        const tl = createTimeline({ autoplay: false });
-
-        if (duration > 0) {
-            tl.add(uniform, {
-                value,
-                duration,
-                ease,
-            });
-        } else {
-            tl.call(() => {
-                // Safe assignment for Three.js objects (like Color)
-                if (uniform.value && typeof (uniform.value as any).set === 'function') {
-                    (uniform.value as any).set(value);
-                } else {
-                    uniform.value = value;
-                }
-            });
-        }
-        return tl;
-    }
-
-    getVisibleAnim(visible: boolean): Timeline {
-        const tl = createTimeline({ autoplay: false });
-        tl.call(() => {
-            this.group.visible = visible;
-        });
-        return tl;
-    }
-
-    // Whitelist of uniforms to be serialized
-    public serializableUniforms: Set<string> = new Set(['uBaseAlpha']);
-
-    getUniformsState() {
-        const state: Record<string, SerializedUniform> = {};
-        for (const name of this.serializableUniforms) {
-            const uniform = this.material.uniforms[name];
-            if (!uniform || uniform.value === null || uniform.value === undefined) continue;
-
-            const res = serializeUniformValue(uniform.value);
-            if (res) {
-                state[name] = res;
-            }
-        }
-        return state;
-    }
-
-    async recoverUniforms(state: Record<string, SerializedUniform>) {
-        const promises: Promise<void>[] = [];
-        for (const [name, data] of Object.entries(state)) {
-            // Check data structure
-            if (!data || typeof data !== 'object' || !data.type) continue;
-
-            const uniform = this.material.uniforms[name];
-            if (!uniform) continue;
-
-            promises.push(deserializeUniformValue(uniform, data));
-        }
-        await Promise.all(promises);
-    }
-}
-
-export interface VisualNodeState {
-    variant: string;
-    visible: boolean;
-    uniforms: Record<string, SerializedUniform>;
-}
+import { VisualNode, type VisualNodeState } from './visual-node';
 
 export interface VisualObjectState {
     name: string;
@@ -339,21 +67,25 @@ export class VisualObject extends THREE.Group {
         await Promise.all(promises);
     }
 
-    async applyExpression(exprName: string, options: { duration?: number; ease?: string; } = {}): Promise<{ anim: Timeline } | null> {
+    /**
+     * 将表达式动画直接添加到给定的 Timeline 中
+     */
+    async addExpressionAnim(
+        tl: Timeline,
+        exprName: string,
+        options: { duration?: number; ease?: string; position?: string | number; } = {}
+    ): Promise<void> {
         const expr = this.exprMap.get(exprName);
-        if (!expr) return null;
+        if (!expr) return;
 
         const { target, variant, visible, uniforms } = expr;
         const duration = options.duration ?? 300;
         const ease = options.ease ?? 'inOutQuad';
-
-        const tl = createTimeline({ autoplay: false });
-
-        let hasAction = false;
+        const position = options.position;
 
         // --- Path A: Global Object Properties (target: self) ---
         if (target === 'self') {
-            if (!uniforms) return null;
+            if (!uniforms) return;
 
             for (const [uName, uValue] of Object.entries(uniforms)) {
                 const sharedUniform = this.sharedUniforms[uName];
@@ -364,48 +96,40 @@ export class VisualObject extends THREE.Group {
                         value: uValue as any,
                         duration,
                         ease,
-                    }, 0);
+                    }, position);
                 } else {
-                    tl.call(() => {
-                        if (sharedUniform.value && typeof (sharedUniform.value as any).set === 'function') {
-                            (sharedUniform.value as any).set(uValue);
-                        } else {
-                            sharedUniform.value = uValue;
+                    tl.add({
+                        duration: 0,
+                        onComplete: () => {
+                            if (sharedUniform.value && typeof (sharedUniform.value as any).set === 'function') {
+                                (sharedUniform.value as any).set(uValue);
+                            } else {
+                                sharedUniform.value = uValue;
+                            }
                         }
-                    });
+                    }, position);
                 }
-                hasAction = true;
             }
-            return hasAction ? { anim: tl } : null;
+            return;
         }
 
         // --- Path B: Node Specific Properties ---
         const node = this.nodes.get(target);
-        if (!node) return null;
+        if (!node) return;
 
         if (variant) {
-            const res = await node.switchToVariant(variant, duration, ease);
-            if (res?.anim) {
-                tl.sync(res.anim, 0);
-                hasAction = true;
-            }
+            await node.addVariantAnim(tl, variant, duration, ease, position);
         }
 
         if (visible !== undefined) {
-            tl.sync(node.getVisibleAnim(visible), 0);
-            hasAction = true;
+            node.addVisibleAnim(tl, visible, position);
         }
 
         if (uniforms) {
             for (const [uName, uValue] of Object.entries(uniforms)) {
-                const anim = node.setUniform(uName, uValue, duration, ease);
-                if (!anim) continue;
-                tl.sync(anim, 0);
-                hasAction = true;
+                node.addUniformAnim(tl, uName, uValue, duration, ease, position);
             }
         }
-
-        return hasAction ? { anim: tl } : null;
     }
 
     @proxyProp('position.x') x!: number;

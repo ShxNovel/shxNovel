@@ -20,7 +20,7 @@ export type AnyAnimateProps =
 interface CommonProps {
     into?: string;
 
-    position?: { x?: number; y?: number; z?: number; }
+    position?: { x?: number | string; y?: number | string; z?: number | string; }
     rotation?: { x?: number; y?: number; z?: number; }
     scale?: { x?: number; y?: number; z?: number; }
 

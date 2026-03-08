@@ -10,10 +10,8 @@ declare module "@shxnovel/schema" {
         'p1.png': never;
         'p2.png': never;
         'p3.png': never;
-        'some/a.jpg': never;
-        'some/a.png': never;
-        'some/b.png': never;
-        'some/more/c.jpg': never;
+        'stand1.png': never;
+        'stand2.png': never;
       }
     }
 

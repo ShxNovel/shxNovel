@@ -4,6 +4,11 @@ declare module "@shxnovel/schema" {
 
   namespace Animate {
     interface VisualMap {
+      'v_stand': {
+        pose: never;
+        expr: 'body:s1' | 'body:s2' | 'v#body' | 'u#body' | '1#body' | '0#body' | '1#self' | '0#self';
+      };
+
       'v_bg': {
         pose: never;
         expr: 'body:p0' | 'body:p1' | 'body:p2' | 'body:p3' | 'v#body' | 'u#body' | '1#body' | '0#body' | '1#self' | '0#self';
