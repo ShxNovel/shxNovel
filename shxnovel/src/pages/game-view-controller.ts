@@ -13,6 +13,7 @@ export class GameViewController implements ReactiveController {
     public uiHidden = false;
     public isAuto = false;
     public isFast = false;
+    public isModalOpen = false;
 
     private _autoTimer: any = null;
     private readonly AUTO_DELAY = 2000; 
@@ -40,22 +41,31 @@ export class GameViewController implements ReactiveController {
         this._stopLoop();
     }
 
-    /**
-     * 核心修复：每次调用都返回一个全新的对象引用
-     */
     get gameContext() {
         return {
             isAuto: this.isAuto,
             isFast: this.isFast,
+            isModalOpen: this.isModalOpen,
             toggleAuto: () => this.toggleAuto(),
             toggleFast: () => this.toggleFast(),
             stopAuto: () => this.stopAuto(),
+            setModalState: (open: boolean) => this.setModalState(open),
         };
     }
 
     // --- Core Logic ---
 
+    public setModalState(open: boolean) {
+        this.isModalOpen = open;
+        if (open) {
+            this.stopAuto();
+        }
+        this.host.requestUpdate();
+    }
+
     public toggleAuto() {
+        if (this.isModalOpen) return;
+
         if (this.isAuto) {
             this.stopAuto();
         } else {
@@ -68,6 +78,8 @@ export class GameViewController implements ReactiveController {
     }
 
     public toggleFast() {
+        if (this.isModalOpen) return;
+
         if (this.isFast) {
             this.stopAuto();
         } else {
@@ -102,6 +114,11 @@ export class GameViewController implements ReactiveController {
     }
 
     private _updateLoop() {
+        if (this.isModalOpen) {
+            this.stopAuto();
+            return;
+        }
+
         const dialogue = this.host.dialogue;
         const status = canoeMachine.getStatus();
 
@@ -124,7 +141,7 @@ export class GameViewController implements ReactiveController {
             if (status === 'waiting' || status === 'idle') {
                 this._stopLoop(); 
                 setTimeout(() => {
-                    if (this.isAuto) {
+                    if (this.isAuto && !this.isModalOpen) {
                         canoeMachine.next();
                         this._startLoop(); 
                     }
@@ -141,6 +158,8 @@ export class GameViewController implements ReactiveController {
     // --- Event Handlers ---
 
     private handleKeyDown = async (e: KeyboardEvent) => {
+        if (this.isModalOpen) return;
+
         if (e.key === 'Backspace' && !this.uiHidden) {
             this.stopAuto();
             const success = await HistoryManager.back();
@@ -155,21 +174,28 @@ export class GameViewController implements ReactiveController {
     };
 
     private handleKeyUp = (e: KeyboardEvent) => {
+        if (this.isModalOpen) return;
+
         if (e.key === 'Control') {
             if (this.isFast) this.stopAuto();
         }
     };
 
     private handleWheel = (e: WheelEvent) => {
+        if (this.isModalOpen) return;
+
         if (e.deltaY > 0) {
             this.handleUserClick();
         } else if (e.deltaY < 0) {
             console.log('TODO: Open Backlog');
+            this.setModalState(true);
         }
     };
 
     private handleContextMenu = (e: MouseEvent) => {
         e.preventDefault();
+        if (this.isModalOpen) return;
+
         if (!this.uiHidden) {
             this.uiHidden = true;
             this.host.requestUpdate();
@@ -177,6 +203,8 @@ export class GameViewController implements ReactiveController {
     };
 
     public handleUserClick = () => {
+        if (this.isModalOpen) return;
+
         if (this.uiHidden) {
             this.uiHidden = false;
             this.host.requestUpdate();
@@ -229,11 +257,13 @@ export class GameViewController implements ReactiveController {
     public onBacklog = (e: Event) => {
         this.stopProp(e);
         console.log('TODO: Open Backlog');
+        this.setModalState(true);
     };
 
     public onSave = (e: Event) => {
         this.stopProp(e);
         console.log('TODO: Open Save UI');
+        this.setModalState(true);
     };
 
     /**

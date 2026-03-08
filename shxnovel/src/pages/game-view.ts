@@ -1,5 +1,5 @@
 import { LitElement, html, css, unsafeCSS, PropertyValues } from 'lit';
-import { customElement, query } from 'lit/decorators.js';
+import { customElement, query, state } from 'lit/decorators.js';
 import { Router } from '@vaadin/router';
 import { classMap } from 'lit/directives/class-map.js';
 import { provide } from '@lit/context';
@@ -26,6 +26,9 @@ import type { SceneBlock, TextUnit } from '@shxnovel/rewrite';
 import { logger } from '@shxnovel/canoe/logger.js';
 import { gameContext } from '../context/game-context';
 import { engine } from 'animejs';
+
+// 导入 Backlog
+import '../components/game/game-backlog';
 
 type UnpackArray<T> = T extends (infer U)[] ? U : T;
 
@@ -54,6 +57,9 @@ export class GameView extends LitElement implements GameViewHost {
     @query('.CanvasBox', true) CanvasBox!: HTMLDivElement;
     @query('game-dialogue') dialogue!: GameDialogue;
     @query('#bottomTool') bottomTool!: GameBottomTool;
+
+    /** 是否显示日志界面 */
+    @state() private _showBacklog = false;
 
     private _controller = new GameViewController(this);
 
@@ -84,6 +90,14 @@ export class GameView extends LitElement implements GameViewHost {
         } else {
             console.warn('[GameView] Quick Save blocked by ongoing action');
         }
+    };
+
+    /**
+     * 响应模态层状态改变
+     */
+    private _onModalChanged = (e: any) => {
+        const opened = e.detail.opened;
+        this._controller.setModalState(opened);
     };
 
     async connectedCallback(): Promise<void> {
@@ -139,7 +153,7 @@ export class GameView extends LitElement implements GameViewHost {
 
     disconnectedCallback() {
         super.disconnectedCallback();
-        
+
         // 6. 清理
         eventController.off('tick', this._handleTickEvent);
         cancelAnimationFrame(this._rafId);
@@ -184,9 +198,17 @@ export class GameView extends LitElement implements GameViewHost {
         this.dialogue.play();
     }
 
+    /**
+     * 呼出/关闭日志界面
+     */
+    private _toggleBacklog(show: boolean) {
+        this._showBacklog = show;
+        this._controller.setModalState(show);
+    }
+
     render() {
         const ctrl = this._controller;
-        
+
         const uiClasses = {
             'ui-layer': true,
             'ui-hidden': ctrl.uiHidden,
@@ -196,13 +218,22 @@ export class GameView extends LitElement implements GameViewHost {
 
         return html`
             <div class="body ${classMap({ 'is-fast': ctrl.isFast })}">
-                <game-top-menu class=${classMap(uiClasses)} @click=${ctrl.stopProp}></game-top-menu>
+                <game-top-menu 
+                    class=${classMap(uiClasses)} 
+                    @click=${ctrl.stopProp}
+                    @modal-changed=${this._onModalChanged}
+                ></game-top-menu>
 
                 <div class="CanvasBox"></div>
 
-                <!-- 可以在这里增加一个全局的状态提示 -->
+                <!-- 状态提示 -->
                 ${ctrl.isFast ? html`<div class="skip-indicator">SKIP >>></div>` : ''}
                 ${ctrl.isAuto ? html`<div class="auto-indicator">AUTO</div>` : ''}
+
+                <!-- Backlog 层 -->
+                ${this._showBacklog ? html`
+                    <game-backlog @close=${() => this._toggleBacklog(false)}></game-backlog>
+                ` : ''}
 
                 <div class="bottom ${classMap(uiClasses)}">
                     <game-dialogue></game-dialogue>
@@ -212,7 +243,7 @@ export class GameView extends LitElement implements GameViewHost {
                         .activeFast=${ctrl.isFast}
                         @click=${ctrl.stopProp}
                         @toggle=${ctrl.onToggle}
-                        @backlog=${ctrl.onBacklog}
+                        @backlog=${() => this._toggleBacklog(true)}
                         @save=${ctrl.onSave}
                         @auto=${ctrl.onAuto}
                         @fast=${ctrl.onFast}

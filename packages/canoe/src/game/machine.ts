@@ -24,6 +24,9 @@ export class CanoeMachine {
             return;
         }
 
+        // 初始化 Session 监听器
+        GameSession.init();
+
         logger.info(`[Machine] Starting at ${GameSession.chapter}:${GameSession.index}`);
         this.instructions = await StoryManager.get(GameSession.chapter);
 
@@ -74,13 +77,15 @@ export class CanoeMachine {
 
         switch (ir.type) {
             case 'tick':
-                // 1. 在执行新 Tick 前推入历史快照
+                // 关键修复：在记录历史前，手动同步当前文本到 Session
+                // 这样 capture() 出来的快照就包含了这一条台词
+                GameSession.lastText = ir.text;
                 await HistoryManager.push();
 
-                // 2. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
+                // 1. 自动机遇到新 Tick，默认清理/跳过上一个 Tick 的未完成动画
                 TimelineBuilder.skip();
 
-                // 3. 同时分发系统指令和动画指令
+                // 2. 同时分发系统指令和动画指令
                 await AnimateExecutor.executeSystem(ir.system);
                 const res = await AnimateExecutor.executeAnimate(ir.animate);
                 
@@ -88,10 +93,10 @@ export class CanoeMachine {
                     res.tl.play();
                 }
 
-                // 4. 抛出文本事件，由 UI 层（shxnovel）处理打字机和对话框显示
+                // 3. 抛出文本事件
                 eventController.emit('tick', ir.text);
 
-                return true; // Tick 始终阻塞，直到用户调用 next()
+                return true; 
 
             case 'jump':
                 await this.performJump(ir.target);
@@ -102,7 +107,6 @@ export class CanoeMachine {
                 return false;
 
             case 'flag':
-                // Flag 目前只做标记，暂不记录逻辑
                 return false;
 
             default:
@@ -120,17 +124,13 @@ export class CanoeMachine {
                 throw new Error(`Flag '${target}' not found`);
             }
 
-            // 如果跳转到不同章节，更新 Session 并重载 IR
             if (GameSession.chapter !== dest.name) {
                 logger.debug(`[Machine] Jumping chapter: ${GameSession.chapter} -> ${dest.name}`);
                 GameSession.chapter = dest.name;
                 this.instructions = await StoryManager.get(GameSession.chapter);
             }
 
-            // 设置 PC 指向 Flag 所在位置
-            // 同样设为 pc - 1，因为外层 while 结束会执行 index++
             GameSession.index = dest.pc - 1;
-            
             logger.info(`[Machine] Jumped to ${target} @ ${dest.name}:${dest.pc}`);
         } catch (err) {
             logger.error(`[Machine] Failed to jump to ${target}:`, err);
@@ -144,16 +144,12 @@ export class CanoeMachine {
     private async handleBranch(ir: BranchIR) {
         const { cond, targets, ENDFLAG } = ir;
 
-        // 准备上下文数据
         const ctx = {
             inGame: InGameData.visit(),
             global: GlobalData.visit(),
         };
 
         try {
-            /**
-             * 评估条件表达式
-             */
             const evalFunc = new Function(
                 'ctx',
                 `const { inGame, global } = ctx; const obj = { ${cond} }; return obj.Condition.call({ inGame, global });`
@@ -189,5 +185,4 @@ export class CanoeMachine {
     }
 }
 
-/** 全局唯一的自动机实例 */
 export const canoeMachine = new CanoeMachine();

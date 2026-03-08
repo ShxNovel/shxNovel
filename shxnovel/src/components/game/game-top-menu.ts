@@ -17,6 +17,12 @@ export class GameTopMenu extends LitElement {
 
     private _onOpenedChanged(e: CustomEvent) {
         this._opened = e.detail.opened;
+        // 通知父组件模态层状态改变
+        this.dispatchEvent(new CustomEvent('modal-changed', {
+            detail: { opened: this._opened },
+            bubbles: true,
+            composed: true
+        }));
     }
 
     // 核心：点击内部按钮时调用的函数
