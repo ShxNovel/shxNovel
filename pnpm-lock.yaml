@@ -48,6 +48,34 @@ importers:
         specifier: ^4
         version: 4.0.16(@types/node@22.19.3)(jiti@2.6.1)(tsx@4.21.0)
 
+  packages/canoe:
+    dependencies:
+      animejs:
+        specifier: ^4.3.6
+        version: 4.3.6
+      stats.js:
+        specifier: ^0.17.0
+        version: 0.17.0
+      three:
+        specifier: ^0.182.0
+        version: 0.182.0
+    devDependencies:
+      '@shxnovel/rewrite':
+        specifier: workspace:*
+        version: link:../rewrite
+      '@shxnovel/schema':
+        specifier: workspace:*
+        version: link:../schema
+      '@shxnovel/world':
+        specifier: workspace:*
+        version: link:../world
+      '@types/three':
+        specifier: ^0.182.0
+        version: 0.182.0
+      rimraf:
+        specifier: ^6.1.2
+        version: 6.1.2
+
   packages/cli:
     dependencies:
       '@shxnovel/rewrite':
