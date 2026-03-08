@@ -49,4 +49,5 @@ class ShxAction {
 */
 export const shxActions = new ShxAction();
 
+// @ts-expect-error
 window.actions = shxActions;
