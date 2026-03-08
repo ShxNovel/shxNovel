@@ -1,0 +1,45 @@
+{
+  "name": "@shxnovel/monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --filter=* dev",
+    "build": "pnpm --filter=* build",
+    "build:pack": "pnpm --filter=\"./packages/**\" build",
+    "preview": "pnpm --filter=* preview",
+    "test": "pnpm --filter=* test"
+  },
+  "author": "shxnovel",
+  "license": "MIT",
+  "packageManager": "pnpm@10.8.0",
+  "pnpm": {
+    "overrides": {
+      "@types/node": "^22",
+      "@types/three": "^0.182.0",
+      "three": "^0.182.0",
+      "stats.js": "^0.17.0",
+      "animejs": "^4.3.6",
+      "typewriter-effect": "^2.22.0",
+      "lit": "^3.3.2",
+      "@lit/context": "^1.1.6",
+      "@vaadin/router": "^2",
+      "@lion/ui": "^0.15.5",
+      "typescript": "^5.9.3",
+      "vite": "^7",
+      "vitest": "^4",
+      "rimraf": "^6.1.2",
+      "json-to-ts": "^2",
+      "tsx": "^4"
+    }
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "@types/three": "*",
+    "tsx": "*",
+    "typescript": "*",
+    "vite": "*",
+    "vitest": "*",
+    "rimraf": "*"
+  }
+}

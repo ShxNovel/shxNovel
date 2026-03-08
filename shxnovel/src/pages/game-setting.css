@@ -1,0 +1,235 @@
+/* === 全局容器与背景 === */
+:host {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+
+    /* 基础背景：你指定的“云端过曝”感 */
+    background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+
+    font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; /* 使用衬线体增加文学感/忧伤感 */
+    color: #4a4e69; /* 深岩灰：用于正文，比纯黑更柔和 */
+}
+
+/* === 主面板：一颗巨大的、半透明的切面宝石 === */
+.container {
+    width: 900px;
+    height: 600px;
+    display: flex;
+    flex-direction: column;
+
+    /* 核心：极度通透的玻璃感 */
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(20px) saturate(120%); /* 强模糊，营造梦幻感 */
+
+    /* 边缘：像宝石切面一样的反光边框 */
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    border-top: 1px solid rgba(255, 255, 255, 1); /* 顶部高光 */
+    border-bottom: 1px solid rgba(136, 155, 176, 0.2); /* 底部阴影反射 */
+
+    border-radius: 2px; /* 这种风格不要大圆角，要微小的圆角，体现“硬度”和“易碎” */
+
+    /* 阴影：不是黑影，而是带颜色的光晕 */
+    box-shadow:
+        0 20px 50px rgba(29, 53, 87, 0.05),
+        /* 深海蓝的淡淡投影 */ inset 0 0 0 1px rgba(255, 255, 255, 0.5); /* 内发光 */
+}
+
+/* === 顶部标题 === */
+.header {
+    padding: 24px 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(136, 155, 176, 0.15); /* 极细的分隔线 */
+}
+
+h1 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: normal;
+    letter-spacing: 0.2em; /* 宽字间距，营造空气感 */
+    color: #1d3557; /* 深海蓝：标题 */
+    text-transform: uppercase;
+    opacity: 0.9;
+}
+
+/* === Tabs 布局：左侧导航，右侧内容 === */
+lion-tabs {
+    flex: 1;
+    display: flex;
+    /* 改为左右布局，更像一本精致的书或菜单 */
+    flex-direction: row;
+    overflow: hidden;
+}
+
+/* 左侧 Tab 按钮栏 */
+[slot='tab'] {
+    display: flex;
+    flex-direction: row;
+    height: fit-content;
+
+    width: 200px; /* 固定左侧宽度 */
+    text-align: left;
+    padding: 20px 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+
+    font-size: 0.95rem;
+    color: #889bb0; /* 灰蓝色：未选中状态，冷静、疏离 */
+    transition: all 0.4s ease;
+
+    /* 装饰：左侧的指示条，默认透明 */
+    border-left: 3px solid transparent;
+}
+
+/* Tab 悬停 */
+[slot='tab']:hover {
+    color: #4a4e69;
+    background: rgba(255, 255, 255, 0.3);
+}
+
+/* Tab 选中状态：宝石的光泽 */
+[slot='tab'][selected] {
+    color: #1d3557; /* 深海蓝 */
+    background: rgba(255, 255, 255, 0.5);
+    border-left: 3px solid #889bb0; /* 灰蓝色高亮 */
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.8);
+}
+
+/* === 右侧内容面板 === */
+[slot='panel'] {
+    /* 隐藏状态交给 Lion */
+    flex: 1;
+    padding: 40px 60px;
+    background: rgba(255, 255, 255, 0.1); /* 极其微妙的层级区分 */
+    overflow-y: auto;
+
+    /* 滚动条美化 (Webkit) */
+    scrollbar-width: thin;
+    scrollbar-color: #889bb0 transparent;
+}
+
+[slot='panel'][selected] {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    /* 这是一个简单的入场动画，增加“易碎/浮动”的感觉 */
+    animation: fadeInMove 0.6s ease-out forwards;
+}
+
+@keyframes fadeInMove {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* === 控件行 === */
+.control-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.label {
+    font-size: 1rem;
+    color: #4a4e69;
+    letter-spacing: 0.05em;
+}
+
+/* === 组件美化：Switch (开关) === */
+lion-switch {
+    --lion-switch-button-width: 40px;
+    --lion-switch-button-height: 20px;
+}
+
+/* 开关轨道：像一条细细的银线 */
+lion-switch::part(input) {
+    background: rgba(136, 155, 176, 0.2); /* 灰蓝色的淡轨道 */
+    border: 1px solid rgba(136, 155, 176, 0.3);
+    border-radius: 20px;
+}
+
+/* 开关滑块：一颗小小的珠子 */
+lion-switch::part(thumb) {
+    background: #fdfbfb;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* 选中状态 */
+lion-switch[checked]::part(input) {
+    background: #889bb0; /* 激活时变成灰蓝色，而不是刺眼的绿色 */
+    border-color: #889bb0;
+    opacity: 0.8;
+}
+
+/* === 组件美化：Range (滑动条) === */
+/* 这种风格的核心是：细线 + 精致的滑块 */
+
+input[type='range'] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 240px;
+    background: transparent;
+}
+
+input[type='range']:focus {
+    outline: none;
+}
+
+/* 轨道：半透明的细线 */
+input[type='range']::-webkit-slider-runnable-track {
+    width: 100%;
+    height: 2px;
+    background: rgba(74, 78, 105, 0.2); /* 深岩灰的淡化版 */
+    border-radius: 1px;
+}
+
+/* 滑块：菱形或圆形宝石 */
+input[type='range']::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 16px;
+    width: 16px;
+    border-radius: 50%; /* 或者 0 (菱形) */
+    background: #fdfbfb;
+    border: 2px solid #889bb0; /* 灰蓝色边框 */
+    margin-top: -7px; /* 居中 */
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(29, 53, 87, 0.1);
+    transition: transform 0.2s;
+}
+
+input[type='range']::-webkit-slider-thumb:hover {
+    transform: scale(1.2);
+    background: #fff;
+    border-color: #1d3557; /* 悬停变深海蓝 */
+}
+
+/* === 返回按钮 === */
+.back-btn {
+    background: transparent;
+    border: 1px solid #889bb0;
+    color: #889bb0;
+    padding: 6px 20px;
+    font-size: 0.8rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.3s;
+    letter-spacing: 1px;
+}
+
+.back-btn:hover {
+    background: rgba(136, 155, 176, 0.1);
+    color: #1d3557;
+    border-color: #1d3557;
+}

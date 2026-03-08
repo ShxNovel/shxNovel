@@ -1,0 +1,197 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`multiple character 1`] = `
+{
+  "cache": Map {
+    "1.1.1" => [
+      {
+        "content": [
+          "11",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          "aa",
+          "bb",
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "22",
+          {
+            "kind": "fast",
+            "text": "xxxx",
+          },
+          "33",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+          "44",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          {
+            "kind": "fast",
+            "text": "yyyy",
+          },
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+    ],
+    "1.1.2" => [
+      {
+        "content": [
+          "11",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          "aa",
+          "bb",
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "22",
+          {
+            "kind": "fast",
+            "text": "xxxx",
+          },
+          "33",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+          "44",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          {
+            "kind": "fast",
+            "text": "yyyy",
+          },
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+    ],
+  },
+  "name": "1.1.2",
+}
+`;
+
+exports[`plain character 1`] = `
+{
+  "cache": Map {
+    "1.1.1" => [
+      {
+        "content": [
+          "11",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          "aa",
+          "bb",
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "22",
+          {
+            "kind": "fast",
+            "text": "xxxx",
+          },
+          "33",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+          "44",
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+      {
+        "content": [
+          {
+            "kind": "fast",
+            "text": "yyyy",
+          },
+        ],
+        "name": null,
+        "quote": false,
+        "type": "text",
+      },
+      {
+        "content": [
+          "",
+          {
+            "kind": "wait",
+            "ms": 1000,
+          },
+        ],
+        "name": "me",
+        "quote": true,
+        "type": "text",
+      },
+    ],
+  },
+  "name": "1.1.1",
+}
+`;

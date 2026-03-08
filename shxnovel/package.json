@@ -1,0 +1,34 @@
+{
+  "name": "shxnovel",
+  "private": true,
+  "version": "0.9.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri"
+  },
+  "packageManager": "pnpm@10.8.0",
+  "dependencies": {
+    "@lion/ui": "*",
+    "@lit/context": "^1.1.6",
+    "@shxnovel/schema": "workspace:*",
+    "@shxnovel/rewrite": "workspace:*",
+    "@shxnovel/world": "workspace:*",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-store": "^2.4.2",
+    "@vaadin/router": "*",
+    "animejs": "*",
+    "lit": "*",
+    "stats.js": "*",
+    "three": "*",
+    "typewriter-effect": "*"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "^2",
+    "typescript": "*",
+    "vite": "*"
+  }
+}

@@ -1,0 +1,144 @@
+* {
+    padding: 0;
+    margin: 0;
+    overflow: hidden !important;
+    user-select: none;
+    font-family: 'AlimamaDongFangDaKai' !important;
+    overflow: visible !important;
+}
+
+body {
+    background-color: rgb(25, 25, 25);
+    background-color: rgb(30, 34, 38);
+
+    height: var(--var-height);
+    width: var(--var-width);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    overflow: hidden;
+}
+
+html {
+    overflow: hidden;
+}
+
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.ml5 {
+    position: relative;
+    font-weight: 300;
+    font-size: 4.5em;
+    color: #402d2d;
+    color: white;
+    /* overflow: visible; */
+}
+
+.ml5 .text-wrapper {
+    position: relative;
+    display: inline-block;
+    padding-top: 0.1em;
+    padding-right: 0.05em;
+    padding-bottom: 0.15em;
+    line-height: 1em;
+    /* overflow: visible; */
+}
+
+.ml5 .line {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    margin: auto;
+    height: 3px;
+    width: 100%;
+    background-color: #402d2d;
+    background-color: white;
+    transform-origin: 0.5 0;
+    /* overflow: visible; */
+    opacity: 0;
+}
+
+.ml5 .ampersand {
+    font-family: AlimamaDongFangDaKai, Baskerville, serif;
+    font-style: italic;
+    font-weight: 400;
+    width: 2em;
+    margin-right: -0.1em;
+    margin-left: -0.1em;
+    /* overflow: visible; */
+}
+
+.ml5 .letters {
+    display: inline-block;
+    opacity: 0;
+    /* overflow: visible; */
+}
+
+/* 
+
+
+*/
+
+.ml9 {
+    z-index: 200;
+    position: relative;
+    position: absolute;
+    font-weight: 200;
+    font-size: 4em;
+    /* overflow: visible; */
+}
+
+.ml9 .text-wrapper {
+    position: relative;
+    display: inline-block;
+    padding-top: 0.2em;
+    padding-right: 0.05em;
+    padding-bottom: 0.1em;
+    /* overflow: visible; */
+}
+
+.ml9 .letter {
+    /* scale: 0; */
+    transform: scale(0);
+    transform-origin: 50% 100%;
+    display: inline-block;
+    line-height: 1.5em;
+    padding-right: 0.05em;
+    /* color: white; */
+    background-image: -webkit-linear-gradient(bottom, #673ab7, #ffeb3b, #9c27b0);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    /* overflow: visible; */
+}
+
+/*
+
+*/
+.round {
+    overflow: hidden;
+    border-radius: 100%;
+}
+
+.round1,
+.round2 {
+    z-index: 100;
+    position: absolute;
+    top: 0;
+    right: 0;
+    background-color: #673ab7;
+}
+
+.boxout {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}

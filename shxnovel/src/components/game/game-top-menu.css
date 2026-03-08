@@ -1,0 +1,214 @@
+/* === 宿主容器 === */
+:host {
+    display: block;
+    /* 宿主本身不需要定位，我们通过内部元素的 fixed 来定位 */
+    z-index: 4000;
+    --lion-dialog-backdrop-background-color: transparent;
+    user-select: none !important;
+}
+
+/* === 核心容器 === */
+.bars {
+    /* 1. 定位与尺寸 */
+    position: fixed;
+    top: 1.5rem;
+    left: 1.5rem;
+    width: 3.5rem; /*稍微大一点的点击区域*/
+    height: 3.5rem;
+
+    /* 2. 完美的居中布局 */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; /* 垂直居中 */
+    align-items: center; /* 水平居中 */
+
+    /* 3. 关键：用 gap 控制间距，不要用 margin */
+    /* 定义变量方便计算：线条高度 2px，间距 8px */
+    --bar-h: 0.3rem;
+    --bar-gap: 0.4rem;
+    gap: var(--bar-gap);
+
+    /* 4. 样式 */
+    cursor: pointer;
+    z-index: 2000;
+    border-radius: 50%;
+    background-color: rgba(86, 125, 232, 0.1); /* 极淡的背景 */
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.bars:hover {
+    background-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+}
+
+/* === 内部关闭按钮特殊处理 === */
+/* 如果它是内部那个用来关闭的按钮，背景透明 */
+.bars.change {
+    background-color: transparent;
+    /* transform: rotate(90deg); */
+}
+
+.bars.change:hover {
+    /* 这是一个额外的小彩蛋：鼠标放上去 X 会转一圈 */
+    /* transform: rotate(90deg); */
+}
+
+.bars.hidden {
+    opacity: 0;
+}
+
+.bars:hover {
+    background-color: white;
+}
+
+/* 变成 X 时的按钮背景 */
+.bars.change {
+    background-color: transparent; /* 打开菜单后，按钮背景透明，以免挡住菜单背景 */
+    z-index: 5000; /* 提高到超过导航栏，确保可点击 */
+    pointer-events: auto; /* 确保按钮可以接收鼠标事件 */
+}
+.bars.change:hover .bar {
+    background-color: #f44336;
+}
+
+/* bar */
+
+.bar {
+    width: 1.8rem;
+    height: 0.2rem;
+    background-color: #3f51b5;
+    border-radius: 0.1rem;
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 更有弹性的动画 */
+    transform-origin: center;
+}
+
+.bar {
+    width: 1.8rem;
+    height: var(--bar-h);
+
+    /* 颜色与形状 */
+    background-color: #57606f; /* 深岩灰，比纯蓝更高级 */
+    border-radius: 2px;
+
+    /* 动画核心 */
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55); /* 有回弹效果 */
+    transform-origin: center center; /* 确保围绕中心旋转 */
+}
+
+/* 1. 顶部线条：下移 + 旋转 */
+.change #bar-1 {
+    /* 计算公式：下移距离 = 间距 + 线条自身高度 */
+    /* 这样它会精确地落到正中心 */
+    transform: translateY(calc(var(--bar-gap) + var(--bar-h))) rotate(45deg);
+    background-color: #f44336; /* 变成红色（可选） */
+}
+
+/* 2. 中间线条：消失 */
+.change #bar-2 {
+    opacity: 0;
+    transform: scale(0); /* 缩放消失更平滑 */
+}
+
+/* 3. 底部线条：上移 + 旋转 */
+.change #bar-3 {
+    /* 计算公式：上移距离 = (间距 + 线条自身高度) * -1 */
+    transform: translateY(calc((var(--bar-gap) + var(--bar-h)) * -1)) rotate(-45deg);
+    background-color: #f44336;
+}
+
+/* === 3. 菜单内容容器 (Content Wrapper) === */
+/* Lion 会把这个 div 移到全局，所以我们用 fixed 占满全屏，但不可点击 */
+.menu-content-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none; /* 穿透 */
+    z-index: 5000; /* 比按钮低 */
+}
+
+/* === 4. 扩散背景 (Background Bubble) === */
+#menu-bg {
+    z-index: 4000; /* 比容器内部低 */
+    pointer-events: auto; /* 阻挡点击，充当物理遮罩 */
+
+    position: absolute;
+    top: -10rem; /* 从左上角外部开始 */
+    left: -10rem;
+    width: 20rem; /* 初始大小 */
+    height: 20rem;
+
+    border-radius: 50%;
+    background-color: rgb(30, 34, 38);
+
+    /* 核心修复：使用 scale 而不是 translate */
+    transform: scale(0);
+    transform-origin: 50% 50%; /* 从中心放大 */
+    transition: transform 0.5s cubic-bezier(0.77, 0, 0.175, 1);
+
+    pointer-events: auto; /* 背景由于很大，可以阻挡点击 */
+}
+
+/* 激活状态：放大 15 倍覆盖屏幕 */
+.change-bg {
+    transform: scale(15) !important;
+}
+
+/* === 5. 导航链接列表 (Nav) === */
+.nav {
+    position: absolute;
+    top: 6rem; /* 位于按钮下方 */
+    left: 3rem;
+    z-index: 4500;
+
+    opacity: 0;
+    transform: translateX(-20px);
+    transition: all 0.3s ease;
+    transition-delay: 0s; /* 关闭时立即消失 */
+
+    pointer-events: auto;
+
+    user-select: none !important;
+}
+
+/* 激活状态：显示并滑入 */
+.nav.change {
+    opacity: 1;
+    transform: translateX(0);
+    transition-delay: 0.2s; /* 打开时延迟一点，等背景铺开 */
+}
+
+.nav ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav li {
+    margin: 1.5rem 0;
+}
+
+button {
+    background-color: transparent;
+    border: none;
+    /* outline: none; */
+}
+
+.menu-item {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 1.6rem;
+    font-family: 'Segoe UI', sans-serif;
+    text-decoration: none;
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-left: 3px solid transparent;
+    transition: all 0.3s;
+}
+
+.menu-item:hover {
+    color: white;
+    border-left-color: #f44336;
+    padding-left: 1.5rem;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}

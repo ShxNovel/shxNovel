@@ -1,0 +1,16 @@
+{
+  "meta": {"version": "1.0", "engine": "ShxNovel"},
+  "resourceList": {
+    "tex_p0": {"type": "texture", "path": "worldIR/tex_p0.ir.json"},
+    "tex_p1": {"type": "texture", "path": "worldIR/tex_p1.ir.json"},
+    "tex_p2": {"type": "texture", "path": "worldIR/tex_p2.ir.json"},
+    "tex_p3": {"type": "texture", "path": "worldIR/tex_p3.ir.json"},
+    "rt_screen": {"type": "rt", "path": "worldIR/rt_screen.ir.json"},
+    "c_main": {"type": "camera", "path": "worldIR/c_main.ir.json"},
+    "s_main": {"type": "scene", "path": "worldIR/s_main.ir.json"},
+    "v_bg": {"type": "visual", "path": "worldIR/v_bg.ir.json"},
+    "pipe_main": {"type": "pipeline", "path": "worldIR/pipe_main.ir.json"},
+    "data_inGame": {"type": "data", "path": "worldIR/data_inGame.ir.json"},
+    "data_global": {"type": "data", "path": "worldIR/data_global.ir.json"}
+  }
+}

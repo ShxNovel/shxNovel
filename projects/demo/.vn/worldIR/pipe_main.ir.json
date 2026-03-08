@@ -1,0 +1,17 @@
+{
+  "name": "pipe_main",
+  "type": "pipeline",
+  "steps": [
+    {
+      "scene": "s_main",
+      "camera": "c_main",
+      "output": "rt_screen",
+      "clear": true,
+      "clearColor": "#000000",
+      "clearAlpha": 0,
+      "viewport": [0, 0, 1920, 1080],
+      "scissor": [0, 0, 1920, 1080],
+      "scissorTest": false
+    }
+  ]
+}

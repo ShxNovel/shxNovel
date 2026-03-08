@@ -1,0 +1,40 @@
+{
+  "name": "@shxnovel/rewrite",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "publishConfig": {
+    "main": "./dist/schema.umd.cjs",
+    "module": "./dist/schema.js",
+    "types": "./types/index.d.ts"
+  },
+  "exports": {
+    "types": "./types/index.d.ts",
+    "import": "./dist/rewrite.js",
+    "require": "./dist/rewrite.umd.cjs"
+  },
+  "scripts": {
+    "test": "vitest --typecheck",
+    "clean:types": "rimraf types",
+    "build": "pnpm run clean:types && tsc -p tsconfig.build.json && vite build"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.8.0",
+  "dependencies": {
+    "@shxnovel/schema": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "*",
+    "@types/three": "*",
+    "rimraf": "*",
+    "typescript": "*",
+    "vite": "*",
+    "vitest": "*"
+  }
+}

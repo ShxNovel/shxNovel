@@ -1,0 +1,39 @@
+{
+  "name": "@shxnovel/world",
+  "version": "0.1.0",
+  "type": "module",
+  "files": [
+    "dist",
+    "types"
+  ],
+  "main": "./src/index.ts",
+  "module": "./src/index.ts",
+  "types": "./src/index.ts",
+  "publishConfig": {
+    "main": "./dist/world.umd.cjs",
+    "module": "./dist/world.js",
+    "types": "./types/index.d.ts"
+  },
+  "exports": {
+    "types": "./types/index.d.ts",
+    "import": "./dist/world.js",
+    "require": "./dist/world.umd.cjs"
+  },
+  "scripts": {
+    "test": "vitest --typecheck",
+    "clean:types": "rimraf types",
+    "build": "pnpm run clean:types && tsc -p tsconfig.build.json && vite build"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.8.0",
+  "devDependencies": {
+    "@shxnovel/schema": "workspace:*",
+    "@types/node": "*",
+    "@types/three": "^0.182.0",
+    "rimraf": "*",
+    "typescript": "*",
+    "vite": "*",
+    "vitest": "*",
+    "animejs": "*"
+  }
+}

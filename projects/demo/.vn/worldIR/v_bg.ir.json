@@ -1,0 +1,31 @@
+{
+  "name": "v_bg",
+  "type": "visual",
+  "nodes": {
+    "body": {
+      "parent": "root",
+      "variants": {
+        "p0": {"use": {"type": "texture", "name": "tex_p0"}},
+        "p1": {"use": {"type": "texture", "name": "tex_p1"}},
+        "p2": {"use": {"type": "texture", "name": "tex_p2"}},
+        "p3": {"use": {"type": "texture", "name": "tex_p3"}}
+      },
+      "pos": [0, 0, 0],
+      "uniforms": {"uBaseAlpha": {"type": "number", "value": 1}},
+      "vertexShader": "sh_autoVertex",
+      "fragmentShader": "sh_autoFragment"
+    }
+  },
+  "exprs": {
+    "body:p0": {"target": "body", "variant": "p0"},
+    "body:p1": {"target": "body", "variant": "p1"},
+    "body:p2": {"target": "body", "variant": "p2"},
+    "body:p3": {"target": "body", "variant": "p3"},
+    "v#body": {"target": "body", "visible": true},
+    "u#body": {"target": "body", "visible": false},
+    "1#body": {"target": "body", "uniforms": {"uBaseAlpha": 1}},
+    "0#body": {"target": "body", "uniforms": {"uBaseAlpha": 0}},
+    "1#self": {"target": "self", "uniforms": {"uGroupAlpha": 1}},
+    "0#self": {"target": "self", "uniforms": {"uGroupAlpha": 0}}
+  }
+}

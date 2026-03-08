@@ -1,0 +1,41 @@
+.box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.bottom {
+    position: absolute;
+
+    width: 100%;
+    height: calc(25% + 5rem);
+
+    left: 0;
+    bottom: 0;
+
+    background-color: #ffffffbb;
+    background: linear-gradient(to top, #ffffffee, #ffffffbb 70%, #ffffff00);
+
+    overflow: visible;
+}
+
+/*  */
+
+/*  */
+
+.hide {
+    display: none;
+}
+
+.sceneHide {
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 5000;
+    width: 100%;
+    height: 100%;
+}
+
+.box_no_event {
+    pointer-events: none;
+}

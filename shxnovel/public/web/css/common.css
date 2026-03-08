@@ -1,0 +1,85 @@
+@font-face {
+    font-family: 'JetBrains-mono';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/JetBrainsMono-Regular.woff2');
+}
+
+@font-face {
+    font-family: 'AlimamaDongFangDaKai';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/AlimamaDongFangDaKai-Regular.ttf');
+}
+
+@font-face {
+    font-family: 'SarasaMonoSC';
+    font-style: normal;
+    font-weight: 400;
+    src: url('../fonts/SarasaMonoSC-Bold.ttf');
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: 'JetBrains-mono';
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+a[href] {
+    color: white;
+    text-decoration: none;
+    /* cursor: url("../icon/c_mouse.png"), pointer; */
+}
+
+html {
+    overflow: hidden;
+    font-size: 16px;
+    font-size: 2em;
+    /* cursor: url("../icon/c_default.png"), pointer; */
+}
+
+body {
+    background-color: #1e2226;
+    width: var(--var-width);
+    height: var(--var-height);
+    overflow: hidden !important;
+    position: relative;
+}
+
+main {
+    z-index: 2000;
+    position: relative;
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.innerBody {
+    z-index: 1000;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin-top: var(--var-imarginTop);
+    margin-left: var(--var-imarginLeft);
+    width: var(--var-iwidth);
+    height: var(--var-iheight);
+}
+
+canvas {
+    z-index: 500;
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    margin-top: var(--var-imarginTop);
+    margin-left: var(--var-imarginLeft);
+    width: var(--var-iwidth);
+    height: var(--var-iheight);
+}
+
+.block {
+    display: block;
+}

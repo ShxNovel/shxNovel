@@ -1,0 +1,389 @@
+main {
+    margin: 0;
+    padding: 0;
+    /* 背景：一种仿佛置身于云端或过度曝光的明亮感 */
+    background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%);
+    color: #555;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100%;
+}
+
+h1 {
+    margin-bottom: 0.2em;
+    font-weight: normal;
+    letter-spacing: 0.35em;
+    color: #889bb0; /* 灰蓝色标题，冷静 */
+    font-size: 2.5rem;
+    text-shadow: 2px 2px 0px #fff;
+
+    /* 衬线体 */
+    font-family: 'Georgia', 'Yu Mincho', 'SimSun', serif;
+}
+
+p.subtitle {
+    margin-bottom: 2.5em;
+    color: #aab;
+    font-size: 0.9em;
+    font-style: italic;
+    letter-spacing: 0.2em;
+
+    /* 衬线体 */
+    font-family: 'Georgia', 'Yu Mincho', 'SimSun', serif;
+}
+
+p.version {
+    margin-bottom: 2.5em;
+    color: #aab;
+    font-size: 1.2em;
+    letter-spacing: 0.2em;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    gap: 1.8em;
+    justify-content: center;
+    align-items: center;
+    padding: 2em;
+}
+
+.container button {
+    min-width: 11rem;
+}
+
+/* bottom */
+
+.bottom {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+}
+
+.left {
+    position: absolute;
+    bottom: -2em;
+    left: 2em;
+    display: flex;
+    gap: 3em;
+    font-size: 1em;
+}
+
+.left p {
+    /* color: #ebedee; */
+    font-style: normal;
+}
+
+.right {
+    position: absolute;
+    bottom: 2em;
+    right: 4.5em;
+    display: flex;
+    gap: 3em;
+}
+
+.bottom .right button {
+    border: none;
+    background-color: unset;
+}
+
+.setting {
+    margin-bottom: 0.18em;
+}
+
+.setting svg,
+.leave svg {
+    width: 3rem !important;
+    height: 3rem !important;
+}
+
+.setting svg path {
+    fill: #727ba2cc;
+    transition: all 0.2s;
+}
+
+.setting svg:hover path {
+    fill: #727ba2;
+}
+
+.leave {
+}
+
+.leave svg path {
+    fill: #727ba280;
+    transition: all 0.2s;
+}
+
+.leave svg:hover path {
+    fill: #727ba2;
+}
+
+/* Rose Quartz  */
+
+.btn-rose {
+    position: relative;
+    border: none;
+    /* 莫兰迪粉色 */
+    background: #e5989b;
+    color: #fff;
+    font-size: 1.2rem;
+    font-family: inherit; /* 继承衬线体 */
+    padding: 0.8rem 2.5rem;
+    cursor: pointer;
+    letter-spacing: 3px;
+    /* 切角更小，显得更精致 */
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    transition: all 0.3s ease;
+}
+
+/* 装饰性切面：模拟水晶内部的裂纹或反光，更透明 */
+.btn-rose::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    /* 非常淡的白色渐变 */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.btn-rose-wrapper {
+    /* 阴影颜色改为同色系的浑浊粉色，不再是黑色，减少攻击性 */
+    filter: drop-shadow(0px 0.3rem 0px #b5838d);
+    transition: filter 0.3s;
+}
+
+.btn-rose-wrapper:hover {
+    filter: drop-shadow(0px 0.4rem 0px #b5838d);
+}
+
+.btn-rose-wrapper:hover .btn-rose {
+    /* transform: translateY(-3px); */
+    background: #edafb2;
+}
+
+.btn-rose-wrapper:active {
+    filter: drop-shadow(0px 2px 0px #b5838d);
+}
+.btn-rose-wrapper:active .btn-rose {
+    transform: translateY(3px);
+}
+
+/* Amethyst */
+
+.btn-amethyst {
+    position: relative;
+    border: none;
+    background: #cdb4db; /* 淡紫 */
+    color: #fff;
+    font-size: 1.2rem;
+    font-family: inherit;
+    padding: 0.8rem 2.5rem;
+    /* min-width: 220px; */
+    cursor: pointer;
+    letter-spacing: 3px;
+    clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+    transition: all 0.3s ease;
+}
+
+.btn-amethyst::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, transparent 60%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+.btn-amethyst-wrapper {
+    filter: drop-shadow(0px 0.3rem 0px #a48bb5); /* 紫色阴影 */
+    transition: filter 0.3s;
+}
+
+.btn-amethyst-wrapper:hover {
+    filter: drop-shadow(0px 0.4rem 0px #a48bb5);
+}
+
+.btn-amethyst-wrapper:hover .btn-amethyst {
+    /* transform: translateY(-2px); */
+    background: #dac3e8;
+}
+
+.btn-amethyst-wrapper:active {
+    filter: drop-shadow(0px 2px 0px #a48bb5);
+}
+.btn-amethyst-wrapper:active .btn-amethyst {
+    transform: translateY(3px);
+}
+
+/* Aquamarine */
+.btn-aqua {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #4a4e69;
+    font-weight: 500;
+    font-family: inherit;
+    font-size: 1rem;
+    letter-spacing: 3px;
+    min-width: 11rem;
+    transition: all 0.4s ease;
+}
+
+.btn-aqua-content {
+    display: block;
+    position: relative;
+    background: #eef4ed;
+    padding: 0.8em 0; /* 上下内边距减少一点，体现层级 */
+    width: 100%;
+    z-index: 2;
+    clip-path: polygon(15px 0, 100% 0, 100% 80%, calc(100% - 15px) 100%, 0 100%, 0 20%);
+    box-shadow: inset 0 0 0 1px #b8c0ff;
+    transition: all 0.4s;
+    text-align: center;
+}
+
+.btn-aqua::after {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 100%;
+    height: 100%;
+    background: #b8c0ff;
+    clip-path: polygon(15px 0, 100% 0, 100% 80%, calc(100% - 15px) 100%, 0 100%, 0 20%);
+    z-index: 1;
+    transition: transform 0.3s;
+    opacity: 0.5;
+}
+
+.btn-aqua:hover .btn-aqua-content {
+    background: #fff;
+    color: #555;
+    box-shadow: inset 0 0 0 1px #8e9aaf;
+}
+
+.btn-aqua:hover::after {
+    transform: translate(-2px, -2px);
+    background: #8e9aaf;
+}
+
+/* sapphire */
+
+.btn-sapphire {
+    position: relative;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: #4cc9f0;
+    font-weight: 800;
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+    transition: all 0.3s ease;
+}
+
+.btn-sapphire-content {
+    display: block;
+    position: relative;
+    background: #102a43; /* 深蓝底色 */
+    padding: 18px 45px;
+    z-index: 2;
+    /* 六边形切割 */
+    clip-path: polygon(15% 0, 100% 0, 100% 80%, 85% 100%, 0 100%, 0 20%);
+    /* 模拟内部发光边框 */
+    box-shadow: inset 0 0 0 2px #4cc9f0;
+    transition: background 0.3s;
+}
+
+/* 外部装饰框，错位放置，增加层次感 */
+.btn-sapphire::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    left: 6px;
+    width: 100%;
+    height: 100%;
+    background: #243b55;
+    clip-path: polygon(15% 0, 100% 0, 100% 80%, 85% 100%, 0 100%, 0 20%);
+    z-index: 1;
+    transition: transform 0.2s;
+}
+
+/* Hover 效果：闪光划过 */
+.btn-sapphire:hover .btn-sapphire-content {
+    background: #163c5e;
+    color: #fff;
+    box-shadow: inset 0 0 0 2px #fff;
+}
+
+.btn-sapphire:hover::after {
+    transform: translate(-3px, -3px);
+    background: #4cc9f0;
+}
+
+.btn-sapphire:active .btn-sapphire-content {
+    transform: translate(3px, 3px);
+}
+.btn-sapphire:active::after {
+    transform: translate(0, 0);
+}
+
+/* Moonstone */
+
+.btn-moon {
+    border: 0;
+    font-size: 1rem;
+    padding: 0.7rem 0;
+    /* width: 200px; */
+    color: #1d3557;
+    font-weight: 500; /* 稍微加粗 */
+    background: #a8dadc;
+    cursor: pointer;
+    font-family: inherit;
+    position: relative;
+    overflow: hidden;
+    transform: skew(-15deg);
+    box-shadow: 3px 3px 0px #457b9d;
+    transition: all 0.3s;
+    letter-spacing: 3px;
+}
+
+.btn-moon::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+    transform: skew(15deg);
+    transition: left 0.6s ease-in-out;
+}
+
+.btn-moon span {
+    display: inline-block;
+    transform: skew(15deg);
+    opacity: 0.95;
+}
+
+.btn-moon:hover {
+    background: #bde0fe;
+    box-shadow: 3px 3px 0px #85a6b8;
+    transform: skew(-15deg) translate(-1px, -1px);
+}
+
+.btn-moon:hover::before {
+    left: 200%;
+}

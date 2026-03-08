@@ -1,0 +1,44 @@
+{
+  "name": "@shxnovel/cli",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "bin": {
+    "shxn": "bin.js"
+  },
+  "files": [
+    "dist",
+    "bin.js"
+  ],
+  "engines": {
+    "node": ">=20.6.0"
+  },
+  "types": "./src/index.ts",
+  "scripts": {
+    "shxn": "node bin.js",
+    "test": "vitest --typecheck",
+    "clean:types": "rimraf types",
+    "build": "pnpm run clean:types && tsc -p tsconfig.build.json && vite build"
+  },
+  "license": "MIT",
+  "packageManager": "pnpm@10.8.0",
+  "dependencies": {
+    "json-stringify-pretty-compact": "^4",
+    "chalk": "^5.6.2",
+    "commander": "^14",
+    "ora": "^9"
+  },
+  "devDependencies": {
+    "@shxnovel/schema": "workspace:*",
+    "@types/node": "*",
+    "rimraf": "*",
+    "typescript": "*",
+    "vite": "*",
+    "vitest": "*"
+  },
+  "peerDependencies": {
+    "@shxnovel/rewrite": "workspace:*",
+    "@shxnovel/world": "workspace:*",
+    "json-to-ts": "^2"
+  }
+}
