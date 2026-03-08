@@ -1,7 +1,7 @@
-import { LitElement, html, css, unsafeCSS } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { LitElement, html, unsafeCSS } from 'lit';
+import { customElement, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { HistoryManager, GameSession, SessionState } from '@shxnovel/canoe';
+import { HistoryManager, SessionState } from '@shxnovel/canoe';
 
 // @ts-ignore
 import inlineStyles from './game-backlog.css?inline';

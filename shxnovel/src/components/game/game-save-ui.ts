@@ -7,6 +7,7 @@ import { Router } from '@vaadin/router';
 
 // @ts-ignore
 import inlineStyles from './game-save-ui.css?inline';
+import { TextOp } from '@shxnovel/schema';
 
 type SaveMode = 'save' | 'load';
 
@@ -70,7 +71,7 @@ export class GameSaveUI extends LitElement {
         }
     }
 
-    private _extractRawText(content: any): string {
+    private _extractRawText(content: TextOp[]): string {
         if (!content) return '无文本信息';
         if (typeof content === 'string') return content;
         if (!Array.isArray(content)) return '';
