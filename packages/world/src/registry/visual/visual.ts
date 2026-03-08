@@ -1,7 +1,8 @@
 import {
     VisualIR, VisualNodeIR, VisualNodeVariantIR,
     ShaderHandle, TextureHandle,
-    UniformValue
+    UniformValue,
+    VisualExpressionsIR
 } from "@shxnovel/schema";
 import { VisualRegistry } from './registry';
 
@@ -53,6 +54,8 @@ export function regVisual(name: string) {
 
     VisualRegistry.reg(Ex_name, result);
 
+    // node-begin
+
     function nodes<N extends VisualNodesSpec>(nodes: N) {
         for (const nodeName in nodes) {
             const element = nodes[nodeName];
@@ -86,6 +89,13 @@ export function regVisual(name: string) {
                 uniforms: { uBaseAlpha: 0, },
             };
         }
+        
+        return builder;
+    }
+
+    function exprs(customExprs: VisualExpressionsIR) {
+        Object.assign(result.exprs, customExprs);
+        return builder;
     }
 
     function solveNode(node: VisualNodesSpec[string]): VisualNodeIR {
@@ -157,5 +167,9 @@ export function regVisual(name: string) {
         return output;
     }
 
-    return { nodes };
+    // node-end
+
+    const builder = { nodes, exprs };
+    return builder;
 }
+

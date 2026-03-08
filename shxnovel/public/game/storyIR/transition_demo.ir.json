@@ -1,0 +1,49 @@
+[
+  {"type": "flag", "name": "emm", "meta": {"debug": "transition.ts:3:1"}},
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["进行一个黑幕转场。"]},
+    "animate": [
+      {"kind": "enter", "target": "v_bg", "args": {"into": "s_main"}},
+      {"kind": "act", "target": "v_bg", "args": {"expr": ["body:p0"]}}
+    ],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["现在屏幕应该是全黑的，趁现在偷偷换背景。（这句话结束后会自动播放下一句）"]},
+    "animate": [
+      {"kind": "act", "target": "v_fx_trans", "args": {"renderOrder": 999, "position": {"z": 1}}},
+      {"kind": "enter", "target": "v_fx_trans", "args": {"into": "s_main"}},
+      {"kind": "act", "target": "v_fx_trans", "args": {"expr": ["appear"], "duration": 1000}}
+    ],
+    "system": [],
+    "meta": {"bindNext": true}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["背景已经换好了，准备拉开黑幕。（这句话结束后会自动播放下一句）"]},
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["1#self", "body:p0"]}}],
+    "system": [],
+    "meta": {"bindNext": true}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["好吧就是前面叠了个黑幕，然后对这个黑幕跑一个着色器动画，听起来真抱歉！"]},
+    "animate": [
+      {"kind": "act", "target": "v_fx_trans", "args": {"expr": ["disappear"], "duration": 1000}},
+      {"kind": "leave", "target": "v_fx_trans", "args": {}}
+    ],
+    "system": [],
+    "meta": {}
+  },
+  {
+    "type": "tick",
+    "text": {"name": null, "quote": false, "content": ["然后就会回到开头的世界。"]},
+    "animate": [],
+    "system": [],
+    "meta": {}
+  },
+  {"type": "jump", "target": "start", "meta": {"debug": "transition.ts:55:1"}}
+]

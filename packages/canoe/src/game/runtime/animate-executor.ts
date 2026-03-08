@@ -12,7 +12,7 @@ import {
 } from '../../resource';
 import { Pipeline } from '../../object/pipeline';
 import { TimelineBuilder } from '../../core/timeline-builder';
-import { type Timeline } from 'animejs';
+import { type Timeline, createTimeline } from 'animejs';
 import { renderScheduler } from '../../core';
 
 export class AnimateExecutor {
@@ -46,15 +46,19 @@ export class AnimateExecutor {
     static async executeAnimate(animate: AnimateIR): Promise<{ tl: Timeline } | null> {
         if (!animate || animate.length === 0) return null;
 
-        // 1. 同步构建 Master Timeline
-        const tl = TimelineBuilder.create({
+        // 1. 创建本地临时 Timeline，防止在构建期间被 GameViewController 误判为 active
+        const tl = createTimeline({
+            autoplay: false,
             onUpdate: () => renderScheduler.requestRender()
         }) as Timeline;
 
-        // 2. 异步解析并直接填充 Timeline (顺序填充)
+        // 2. 异步解析并填充 Timeline
         for (const op of animate) {
             await this.fillAnimOp(tl, op);
         }
+
+        // 3. 构建完成后，设为全局 active timeline
+        TimelineBuilder.setActive(tl);
 
         return { tl };
     }
@@ -96,7 +100,7 @@ export class AnimateExecutor {
         const duration = args?.duration ?? 0;
         const ease = args?.easing ?? 'inOutQuad';
 
-        // 1. 基础变换 (Position, Scale, Rotation)
+        // 1. 基础变换 (Position, Scale, Rotation, Layering)
         const props: any = { duration, ease };
         let hasProp = false;
 
@@ -116,6 +120,12 @@ export class AnimateExecutor {
             if (args.rotation.x !== undefined) { props.rotationX = args.rotation.x; hasProp = true; }
             if (args.rotation.y !== undefined) { props.rotationY = args.rotation.y; hasProp = true; }
             if (args.rotation.z !== undefined) { props.rotationZ = args.rotation.z; hasProp = true; }
+        }
+
+        // 使用代理属性 render_order 以触发 VisualObject 的同步逻辑
+        if (args?.renderOrder !== undefined) {
+            props.render_order = args.renderOrder;
+            hasProp = true;
         }
 
         if (hasProp) {

@@ -15,9 +15,10 @@ export class GameViewController implements ReactiveController {
     public isFast = false;
     public isModalOpen = false;
 
-    private _autoTimer: any = null;
+    private _monitorTimer: any = null;
     private readonly AUTO_DELAY = 2000;
-    private readonly FAST_INTERVAL = 250;
+    private readonly FAST_INTERVAL = 100;
+    private readonly IDLE_INTERVAL = 1000;
 
     /** 冷却状态：防止关闭模态层时的点击穿透 */
     private _isClosingCooldown = false;
@@ -33,6 +34,9 @@ export class GameViewController implements ReactiveController {
         this.host.addEventListener('click', this.handleUserClick);
         document.addEventListener('keydown', this.handleKeyDown);
         document.addEventListener('keyup', this.handleKeyUp);
+
+        // 启动持久化监控循环
+        this._startMonitor();
     }
 
     hostDisconnected() {
@@ -41,7 +45,28 @@ export class GameViewController implements ReactiveController {
         this.host.removeEventListener('click', this.handleUserClick);
         document.removeEventListener('keydown', this.handleKeyDown);
         document.removeEventListener('keyup', this.handleKeyUp);
-        this._stopLoop();
+
+        this._stopMonitor();
+    }
+
+    private _startMonitor() {
+        this._stopMonitor();
+        const interval = (this.isFast || this.isAuto) ? this.FAST_INTERVAL : this.IDLE_INTERVAL;
+        this._monitorTimer = setInterval(() => this._updateLoop(), interval);
+    }
+
+    private _stopMonitor() {
+        if (this._monitorTimer) {
+            clearInterval(this._monitorTimer);
+            this._monitorTimer = null;
+        }
+    }
+
+    /**
+     * 当状态改变时，可能需要调整轮询频率
+     */
+    private _refreshMonitor() {
+        this._startMonitor();
     }
 
     /**
@@ -63,7 +88,6 @@ export class GameViewController implements ReactiveController {
 
     public setModalState(open: boolean) {
         if (!open && this.isModalOpen) {
-            // 如果是从开启转为关闭，开启短暂的点击拦截冷却
             this._isClosingCooldown = true;
             setTimeout(() => { this._isClosingCooldown = false; }, 100);
         }
@@ -84,7 +108,7 @@ export class GameViewController implements ReactiveController {
             this.isFast = false;
             this.isAuto = true;
             logger.info('Auto Mode: ON');
-            this._startLoop();
+            this._refreshMonitor();
         }
         this.host.requestUpdate();
     }
@@ -98,7 +122,7 @@ export class GameViewController implements ReactiveController {
             this.isAuto = false;
             this.isFast = true;
             logger.info('Fast Mode: ON');
-            this._startLoop();
+            this._refreshMonitor();
         }
         this.host.requestUpdate();
     }
@@ -107,36 +131,32 @@ export class GameViewController implements ReactiveController {
         if (this.isAuto || this.isFast) {
             this.isAuto = false;
             this.isFast = false;
-            this._stopLoop();
             logger.info('Auto/Fast Stopped');
+            this._refreshMonitor();
             this.host.requestUpdate();
         }
     }
 
-    private _startLoop() {
-        this._stopLoop();
-        this._autoTimer = setInterval(() => this._updateLoop(), this.isFast ? this.FAST_INTERVAL : 200);
-    }
-
-    private _stopLoop() {
-        if (this._autoTimer) {
-            clearInterval(this._autoTimer);
-            this._autoTimer = null;
-        }
-    }
-
     private _updateLoop() {
-        if (this.isModalOpen) {
-            this.stopAuto();
-            return;
-        }
+        if (this.isModalOpen) return;
 
         const dialogue = this.host.dialogue;
         const status = canoeMachine.getStatus();
         const tl = TimelineBuilder.active;
         const isAnimating = tl && !tl.completed;
 
-        // --- Fast Mode Logic (保持不变，追求最快速度) ---
+        // --- 1. BindNext Logic (优先级最高，始终运行) ---
+        const currentIR = canoeMachine.getCurrentInstruction();
+        if (currentIR?.meta?.bindNext) {
+            // 如果满足推进条件（打字完、动画完、正在等待）
+            if (!dialogue?.isTyping && !isAnimating && status === 'waiting') {
+                logger.debug('[GameView] BindNext triggered auto-advance');
+                canoeMachine.next();
+                return; // 本轮结束
+            }
+        }
+
+        // --- 2. Fast Mode Logic (追求最快速度) ---
         if (this.isFast) {
             if (dialogue?.isTyping) dialogue.finish();
             if (isAnimating) TimelineBuilder.skip();
@@ -147,32 +167,25 @@ export class GameViewController implements ReactiveController {
             return;
         }
 
-        // --- Auto Mode Logic (重构：温和等待) ---
+        // --- 3. Auto Mode Logic (温和等待) ---
         if (this.isAuto) {
-            // 1. 如果还在打字或者播动画，直接跳过本轮，不做任何操作
-            if (dialogue?.isTyping || isAnimating) {
-                return;
-            }
+            if (dialogue?.isTyping || isAnimating) return;
 
-            // 2. 只有在等待点击的状态下，才进行推进逻辑
             if (status === 'waiting' || status === 'idle') {
-                // 停止当前的高频轮询计时器
-                this._stopLoop();
+                // 暂时停止高频监控
+                this._stopMonitor();
 
-                // 开启一个单次的延迟任务
                 setTimeout(() => {
-                    // 再次检查状态，防止在等待期间玩家关闭了 Auto 或打开了模态层
                     if (this.isAuto && !this.isModalOpen) {
                         const currentTl = TimelineBuilder.active;
                         const currentlyAnimating = currentTl && !currentTl.completed;
 
-                        // 确保在这一秒钟的等待里，没有新的演出被触发（例如异步加载）
                         if (!dialogue?.isTyping && !currentlyAnimating) {
                             canoeMachine.next();
                         }
-
-                        // 无论是否推进，都重新回到轮询循环
-                        this._startLoop();
+                        this._startMonitor(); // 恢复监控
+                    } else {
+                        this._startMonitor(); // 即使没推进也要恢复监控
                     }
                 }, this.AUTO_DELAY);
             }
@@ -216,7 +229,6 @@ export class GameViewController implements ReactiveController {
         if (e.deltaY > 10) {
             this.handleUserClick();
         } else if (e.deltaY < -10) {
-            // 只有在允许存档（演出静止）时才允许打开 Backlog
             if (this.canSaveNow()) {
                 this.host.dispatchEvent(new CustomEvent('open-backlog', { bubbles: true, composed: true }));
             }
@@ -234,7 +246,6 @@ export class GameViewController implements ReactiveController {
     };
 
     public handleUserClick = () => {
-        // 如果模态层开启，或者是刚刚关闭（冷却中），则不响应点击推进
         if (this.isModalOpen || this._isClosingCooldown) return;
 
         if (this.uiHidden) {
@@ -298,14 +309,10 @@ export class GameViewController implements ReactiveController {
     public onSave = (e: Event) => {
         this.stopProp(e);
         if (this.canSaveNow()) {
-            console.log('TODO: Open Save UI');
             this.setModalState(true);
         }
     };
 
-    /**
-     * 判断当前是否允许存档
-     */
     private canSaveNow(): boolean {
         const dialogue = this.host.dialogue;
         if (dialogue && dialogue.isTyping) return false;
@@ -317,9 +324,6 @@ export class GameViewController implements ReactiveController {
         return status === 'waiting' || status === 'idle';
     }
 
-    /**
-     * 通用的保存方法，供 UI 层调用
-     */
     public async performSave(slotId: string) {
         if (!this.canSaveNow()) {
             logger.warn('[GameView] Cannot save during animations or typing');
@@ -349,7 +353,6 @@ export class GameViewController implements ReactiveController {
         if (success) {
             logger.info('[GameView] Quick Save successful');
         } else {
-            // 如果保存被阻止（例如正在演出），发出通知
             this.host.dispatchEvent(new CustomEvent('save-blocked', { bubbles: true, composed: true }));
         }
     };

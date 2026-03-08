@@ -25,7 +25,8 @@
     "lit": "*",
     "stats.js": "*",
     "three": "*",
-    "typewriter-effect": "*"
+    "typewriter-effect": "*",
+    "howler": "*"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

@@ -42,6 +42,16 @@ export class TimelineBuilder {
     }
 
     /**
+     * Set an existing timeline as the current active one.
+     */
+    static setActive(tl: Timeline | null) {
+        if (this.currentTL && this.currentTL !== tl) {
+            this.kill();
+        }
+        this.currentTL = tl;
+    }
+
+    /**
      * Add an animation to the current timeline.
      */
     static add(anim: any | null, position?: string | number) {

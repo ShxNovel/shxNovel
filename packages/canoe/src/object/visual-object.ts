@@ -17,6 +17,7 @@ export interface VisualObjectState {
     tint: number; // Hex color
     nodes: Record<string, VisualNodeState>;
     parentName?: string; // 记录挂载的场景
+    renderOrder?: number;
 }
 
 export class VisualObject extends THREE.Group {
@@ -124,12 +125,12 @@ export class VisualObject extends THREE.Group {
         }
 
         if (visible !== undefined) {
-            node.addVisibleAnim(tl, visible, position);
+            await node.addVisibleAnim(tl, visible, position);
         }
 
         if (uniforms) {
             for (const [uName, uValue] of Object.entries(uniforms)) {
-                node.addUniformAnim(tl, uName, uValue, duration, ease, position);
+                await node.addUniformAnim(tl, uName, uValue, duration, ease, position);
             }
         }
     }
@@ -161,6 +162,32 @@ export class VisualObject extends THREE.Group {
         }
     }
 
+    /**
+     * 为动画引擎提供的代理属性
+     * 设置时会自动同步到子节点的 Mesh
+     */
+    get render_order() {
+        return this.renderOrder;
+    }
+
+    set render_order(value: number) {
+        this.renderOrder = value;
+        this.syncRenderOrder();
+    }
+
+    /**
+     * 同步 renderOrder 到所有子节点
+     * 由于 Three.js 限制，无法直接重载 renderOrder 属性，需手动调用
+     */
+    syncRenderOrder(value?: number) {
+        if (value !== undefined) {
+            this.renderOrder = value;
+        }
+        for (const node of this.nodes.values()) {
+            node.mesh.renderOrder = this.renderOrder;
+        }
+    }
+
     getState(): VisualObjectState {
         const nodesState: Record<string, VisualNodeState> = {};
         for (const [name, node] of this.nodes) {
@@ -179,7 +206,8 @@ export class VisualObject extends THREE.Group {
             nodes: nodesState,
             groupAlpha: this.opacity,
             tint: this.sharedUniforms.uTint.value.getHex(),
-            parentName: this.parent?.name
+            parentName: this.parent?.name,
+            renderOrder: this.renderOrder
         };
     }
 
@@ -201,6 +229,11 @@ export class VisualObject extends THREE.Group {
         this.opacity = state.groupAlpha;
         if (state.tint !== undefined) {
             this.sharedUniforms.uTint.value.setHex(state.tint);
+        }
+
+        if (state.renderOrder !== undefined) {
+            this.renderOrder = state.renderOrder;
+            this.syncRenderOrder();
         }
 
         // 恢复挂载关系

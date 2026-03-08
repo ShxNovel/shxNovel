@@ -1,0 +1,5 @@
+{
+  "name": "sh_blindsFragment",
+  "type": "shader",
+  "code": "\n        precision highp float;\n        uniform float uProgress;   // 0.0 to 1.0\n        uniform float uCount;      // Number of blinds\n        uniform float uGroupAlpha;\n        uniform vec3 uTint;\n        varying vec2 vUv;\n\n        void main() {\n            // Calculate stripe mask\n            float stripe = fract(vUv.y * uCount);\n            float mask = step(stripe, uProgress);\n            \n            float alpha = mask * uGroupAlpha;\n            gl_FragColor = vec4(uTint * 0.0, alpha);\n            if (alpha < 0.001) discard;\n        }\n    "
+}

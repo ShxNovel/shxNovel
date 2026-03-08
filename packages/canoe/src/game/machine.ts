@@ -219,6 +219,13 @@ export class CanoeMachine {
         await this.runLoop();
     }
 
+    /**
+     * 获取当前正在执行（或暂停处）的指令
+     */
+    getCurrentInstruction() {
+        return this.instructions[GameSession.index];
+    }
+
     getStatus() {
         return this.status;
     }

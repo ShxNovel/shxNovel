@@ -11,10 +11,17 @@
     "c_main": {"type": "camera", "path": "worldIR/c_main.ir.json"},
     "s_main": {"type": "scene", "path": "worldIR/s_main.ir.json"},
     "v_stand": {"type": "visual", "path": "worldIR/v_stand.ir.json"},
+    "v_transition": {"type": "visual", "path": "worldIR/v_transition.ir.json"},
+    "v_blinds": {"type": "visual", "path": "worldIR/v_blinds.ir.json"},
+    "v_fx_trans": {"type": "visual", "path": "worldIR/v_fx_trans.ir.json"},
     "v_bg": {"type": "visual", "path": "worldIR/v_bg.ir.json"},
     "pipe_main": {"type": "pipeline", "path": "worldIR/pipe_main.ir.json"},
     "sh_autoVertex": {"type": "shader", "path": "worldIR/sh_autoVertex.ir.json"},
     "sh_autoFragment": {"type": "shader", "path": "worldIR/sh_autoFragment.ir.json"},
+    "sh_transitionVertex": {"type": "shader", "path": "worldIR/sh_transitionVertex.ir.json"},
+    "sh_transitionFragment": {"type": "shader", "path": "worldIR/sh_transitionFragment.ir.json"},
+    "sh_blindsFragment": {"type": "shader", "path": "worldIR/sh_blindsFragment.ir.json"},
+    "sh_diamondDissolveFragment": {"type": "shader", "path": "worldIR/sh_diamondDissolveFragment.ir.json"},
     "data_inGame": {"type": "data", "path": "worldIR/data_inGame.ir.json"},
     "data_global": {"type": "data", "path": "worldIR/data_global.ir.json"}
   }

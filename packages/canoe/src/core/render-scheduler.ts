@@ -18,8 +18,8 @@ class RenderScheduler {
     }
 
     shouldRender() {
-        // shxActions.test().some(Boolean) && (this.dirty = true);
-        // return this.dirty || this.activeAnimations > 0;
+        shxActions.test().some(Boolean) && (this.dirty = true);
+        return this.dirty || this.activeAnimations > 0;
 
         // DEBUG: Force rendering every frame
         this.dirty;

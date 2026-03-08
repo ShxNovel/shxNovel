@@ -1,0 +1,29 @@
+{
+  "name": "v_transition",
+  "type": "visual",
+  "nodes": {
+    "main": {
+      "parent": "root",
+      "variants": {},
+      "pos": [0, 0, 0],
+      "size": [3000, 3000],
+      "uniforms": {
+        "uDarkness": {"type": "number", "value": 0},
+        "uGroupAlpha": {"type": "number", "value": 1},
+        "uTint": {"type": "color", "value": 0}
+      },
+      "vertexShader": "sh_transitionVertex",
+      "fragmentShader": "sh_transitionFragment"
+    }
+  },
+  "exprs": {
+    "v#main": {"target": "main", "visible": true},
+    "u#main": {"target": "main", "visible": false},
+    "1#main": {"target": "main", "uniforms": {"uBaseAlpha": 1}},
+    "0#main": {"target": "main", "uniforms": {"uBaseAlpha": 0}},
+    "1#self": {"target": "self", "uniforms": {"uGroupAlpha": 1}},
+    "0#self": {"target": "self", "uniforms": {"uGroupAlpha": 0}},
+    "fade_in": {"target": "main", "uniforms": {"uDarkness": 1}},
+    "fade_out": {"target": "main", "uniforms": {"uDarkness": 0}}
+  }
+}

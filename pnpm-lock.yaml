@@ -15,6 +15,7 @@ overrides:
   '@lit/context': ^1.1.6
   '@vaadin/router': ^2
   '@lion/ui': ^0.16.1
+  howler: 2.2.4
   typescript: ^5.9.3
   vite: ^7
   vitest: ^4
@@ -249,6 +250,9 @@ importers:
       animejs:
         specifier: ^4.3.6
         version: 4.3.6
+      howler:
+        specifier: 2.2.4
+        version: 2.2.4
       lit:
         specifier: ^3.3.2
         version: 3.3.2
@@ -965,6 +969,9 @@ packages:
   hasown@2.0.2:
     resolution: {integrity: sha512-0hJU9SCPvmMzIBdZFqNPXWa6dqh7WdH0cII9y+CyS8rG3nL48Bclra9HmKhVVUHyPWNH5Y7xDwAB7bfgSjkUMQ==}
     engines: {node: '>= 0.4'}
+
+  howler@2.2.4:
+    resolution: {integrity: sha512-iARIBPgcQrwtEr+tALF+rapJ8qSc+Set2GJQl7xT1MQzWaVkFebdJhR3alVlSiUf5U7nAANKuj3aWpwerocD5w==}
 
   ibantools@4.5.1:
     resolution: {integrity: sha512-DfKQpLlFq9yEUIEnFuCJzss3XavD7iHZTU5PyqXiAJ+rmaMp+NFP3hboumHKuK8nZjuOJg93WemTzcQ5b9jOZA==}
@@ -2208,6 +2215,8 @@ snapshots:
   hasown@2.0.2:
     dependencies:
       function-bind: 1.1.2
+
+  howler@2.2.4: {}
 
   ibantools@4.5.1: {}
 

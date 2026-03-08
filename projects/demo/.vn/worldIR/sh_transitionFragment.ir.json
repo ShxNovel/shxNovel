@@ -1,0 +1,5 @@
+{
+  "name": "sh_transitionFragment",
+  "type": "shader",
+  "code": "\n        precision highp float;\n        uniform float uDarkness;   // 0.0 is transparent, 1.0 is fully black\n        uniform float uGroupAlpha; // Global alpha from engine\n        uniform vec3 uTint;        // Standard tint\n        varying vec2 vUv;\n\n        void main() {\n            float alpha = uDarkness * uGroupAlpha;\n            gl_FragColor = vec4(uTint * 0.0, alpha); // Black tinted by uTint (usually black)\n            if (alpha < 0.001) discard;\n        }\n    "
+}

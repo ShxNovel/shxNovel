@@ -31,6 +31,6 @@ cam.act.x("+=100").duration(100);
 
 me`然后背景淡出`;
 school.act.expr("0#self").duration(1000);
-school.leave;
+// school.leave;
 
-jump("start");
+jump("emm");

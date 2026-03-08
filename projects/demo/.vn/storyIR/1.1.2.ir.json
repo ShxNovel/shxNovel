@@ -52,12 +52,9 @@
   {
     "type": "tick",
     "text": {"name": "卡咖喱", "quote": true, "content": ["然后背景淡出"]},
-    "animate": [
-      {"kind": "act", "target": "v_bg", "args": {"expr": ["0#self"], "duration": 1000}},
-      {"kind": "leave", "target": "v_bg", "args": {}}
-    ],
+    "animate": [{"kind": "act", "target": "v_bg", "args": {"expr": ["0#self"], "duration": 1000}}],
     "system": [],
     "meta": {}
   },
-  {"type": "jump", "target": "start", "meta": {"debug": "1.1.2.ts:36:1"}}
+  {"type": "jump", "target": "emm", "meta": {"debug": "1.1.2.ts:36:1"}}
 ]
